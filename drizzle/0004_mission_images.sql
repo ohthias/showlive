@@ -1,0 +1,1 @@
+ALTER TABLE "event_settings" ADD COLUMN "show_mission_images" boolean DEFAULT true NOT NULL;
