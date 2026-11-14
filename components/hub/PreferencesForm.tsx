@@ -38,6 +38,7 @@ export function PreferencesForm({ initial }: { initial: UserPrefs }) {
               <option value="fll_fe">FLL Future Edition</option>
               <option value="obr">OBR Resgate</option>
               <option value="custom">Desafio personalizado</option>
+              <option value="alliance">Alianças (FTC e similares)</option>
             </select>
           </label>
           <label>

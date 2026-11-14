@@ -2,15 +2,16 @@
 
 import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Blocks, LayoutTemplate, ListChecks, Map, Minus, Plus, Radio, Ruler, Scale, Sparkles, Timer, Trophy } from "lucide-react";
+import { Blocks, LayoutTemplate, ListChecks, Map, Minus, Plus, Radio, Ruler, Scale, Sparkles, Swords, Timer, Trophy } from "lucide-react";
 import { createEvent, type CreateEventInput } from "@/app/actions/events";
 import { cornerBtn } from "@/components/ui/brand";
 import { useToast } from "@/components/ui/Toast";
 import { CHALLENGE_PRESETS, CHALLENGE_TYPES, type ChallengeType } from "@/lib/challenge";
 import { SEASONS } from "@/lib/missions";
+import { ALLIANCE_PRESETS } from "@/lib/alliance-presets";
 import type { UserPrefs } from "@/lib/prefs";
 
-type Tpl = { id: string; name: string; type: string };
+type Tpl = { id: string; name: string; type: string; alliance?: boolean };
 type Source = NonNullable<CreateEventInput["source"]>;
 const ICON = { missions: ListChecks, time: Timer, judged: Scale, measure: Ruler } as const;
 
@@ -21,9 +22,12 @@ export function CreateEventButton({ big = false, prefs, templates = [] }: { big?
   const [name, setName] = useState("");
   const [format, setFormat] = useState<CreateEventInput["format"]>(prefs?.defaultFormat ?? "fll");
   const [season, setSeason] = useState<string>(prefs?.defaultSeason ?? SEASONS[0].id);
+  const customTemplates = templates.filter((t) => !t.alliance);
+  const allianceTemplates = templates.filter((t) => t.alliance);
   const [source, setSource] = useState<Source>(
-    templates[0] ? { kind: "template", id: templates[0].id } : { kind: "preset", id: CHALLENGE_PRESETS[0].id },
+    customTemplates[0] ? { kind: "template", id: customTemplates[0].id } : { kind: "preset", id: CHALLENGE_PRESETS[0].id },
   );
+  const [allianceSource, setAllianceSource] = useState<Source>({ kind: "alliance-preset", id: ALLIANCE_PRESETS[0].id });
   const [rounds, setRounds] = useState(prefs?.defaultRounds ?? 3);
   const [pending, start] = useTransition();
 
@@ -36,12 +40,21 @@ export function CreateEventButton({ big = false, prefs, templates = [] }: { big?
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     start(async () => {
-      const r = await createEvent({ name, format, season, source: format === "custom" ? source : undefined, roundCount: rounds });
+      const r = await createEvent({
+        name,
+        format,
+        season,
+        source: format === "custom" ? source : format === "alliance" ? allianceSource : undefined,
+        roundCount: rounds,
+      });
       if (!r.ok) return addToast(r.error, "error");
       ref.current?.close();
       if (r.data.format === "custom") {
         addToast("Evento criado! Revise o desafio e cadastre as equipes.", "success");
         router.push(`/hub/${r.data.id}/desafio`);
+      } else if (r.data.format === "alliance") {
+        addToast("Evento criado! Cadastre as equipes e gere as partidas.", "success");
+        router.push(`/hub/${r.data.id}/equipes`);
       } else if (r.data.format === "obr") {
         addToast("Evento criado! Agora monte as 3 arenas da competição.", "success");
         router.push(`/hub/${r.data.id}/arenas`);
@@ -120,10 +133,63 @@ export function CreateEventButton({ big = false, prefs, templates = [] }: { big?
                   <span className="mt-1 block font-bold">Desafio personalizado</span>
                   <span className="text-xs text-base-content/55">Você define tipo, objetivo, regras e pontos</span>
                 </button>
+                <button type="button" className={`${card(format === "alliance")} col-span-2`} onClick={() => setFormat("alliance")}>
+                  <Swords size={18} className="text-error" />
+                  <span className="mt-1 block font-bold">Alianças · FTC e similares</span>
+                  <span className="text-xs text-base-content/55">Partidas vermelha × azul ou cooperativas, RP, vitórias e desempates</span>
+                </button>
               </div>
             </fieldset>
 
-            {format === "obr" ? (
+            {format === "alliance" ? (
+              <fieldset className="space-y-4">
+                <legend className="text-sm font-medium">Modelo de partida</legend>
+                {allianceTemplates.length > 0 && (
+                  <div>
+                    <p className="kicker mb-2 flex items-center gap-1.5">
+                      <LayoutTemplate size={12} /> Meus templates de alianças
+                    </p>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      {allianceTemplates.slice(0, 6).map((t) => {
+                        const sel = allianceSource.kind === "template" && allianceSource.id === t.id;
+                        return (
+                          <button
+                            key={t.id}
+                            type="button"
+                            className={card(sel)}
+                            onClick={() => {
+                              setAllianceSource({ kind: "template", id: t.id });
+                              if (!name.trim()) setName(t.name);
+                            }}
+                          >
+                            <span className="flex items-center gap-2 font-bold">
+                              <Swords size={15} /> <span className="truncate">{t.name}</span>
+                            </span>
+                            <span className="text-xs text-base-content/55">Template salvo</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {ALLIANCE_PRESETS.map((p) => {
+                    const sel = allianceSource.kind === "alliance-preset" && allianceSource.id === p.id;
+                    return (
+                      <button key={p.id} type="button" className={card(sel)} onClick={() => setAllianceSource({ kind: "alliance-preset", id: p.id })}>
+                        <span className="block font-bold">{p.label}</span>
+                        <span className="font-mono text-[10px] tracking-wider text-base-content/55">{p.short.toUpperCase()}</span>
+                        <span className="mt-1 block text-xs text-base-content/60">{p.description}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="text-xs text-base-content/55">
+                  Os itens da súmula são exemplos: depois de criar, ajuste tudo no construtor (tamanho das alianças, RP, desempates, pontos) e
+                  salve como template para reutilizar.
+                </p>
+              </fieldset>
+            ) : format === "obr" ? (
               <div className="rounded-tl-xl rounded-br-xl border border-info/30 bg-info/10 p-4 text-sm">
                 <p className="font-bold">Como funciona a OBR Resgate aqui</p>
                 <ul className="mt-2 list-disc space-y-1 pl-5 text-base-content/70">
@@ -154,13 +220,13 @@ export function CreateEventButton({ big = false, prefs, templates = [] }: { big?
             ) : (
               <fieldset className="space-y-4">
                 <legend className="text-sm font-medium">Desafio</legend>
-                {templates.length > 0 && (
+                {customTemplates.length > 0 && (
                   <div>
                     <p className="kicker mb-2 flex items-center gap-1.5">
                       <LayoutTemplate size={12} /> Meus templates
                     </p>
                     <div className="grid gap-2 sm:grid-cols-2">
-                      {templates.slice(0, 6).map((t) => {
+                      {customTemplates.slice(0, 6).map((t) => {
                         const I = ICON[t.type as ChallengeType] ?? ListChecks;
                         return (
                           <button key={t.id} type="button" className={card(isSel({ kind: "template", id: t.id }))} onClick={() => pick({ kind: "template", id: t.id })}>
@@ -208,7 +274,7 @@ export function CreateEventButton({ big = false, prefs, templates = [] }: { big?
               </fieldset>
             )}
 
-            {format !== "obr" && <div className="flex items-center justify-between">
+            {format !== "obr" && format !== "alliance" && <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium">Rodadas classificatórias</p>
                 <p className="text-xs text-base-content/55">Dá para renomear e mudar depois.</p>

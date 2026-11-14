@@ -1,9 +1,10 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useTransition } from "react";
 import Link from "next/link";
-import { Activity, ArrowRight, ClipboardCheck, Megaphone, Radio, Send, Timer, Trophy, Tv, Users, WifiOff } from "lucide-react";
-import { postMessage, controlTimer } from "@/app/actions/settings";
+import { Activity, ArrowRight, ClipboardCheck, Radio, Timer, Trophy, Tv, Users, WifiOff } from "lucide-react";
+import { controlTimer } from "@/app/actions/settings";
+import { CameraQuickToggle, ScreenMessageBox } from "./ScreenControls";
 import { Bracket } from "@/components/live/Bracket";
 import { TimerControls } from "@/components/live/TimerControls";
 import { cornerBtn, EmptyState, Panel } from "@/components/ui/brand";
@@ -11,6 +12,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useLiveEvent } from "@/hooks/useLiveEvent";
 import type { LiveActivity, LiveSnapshot } from "@/lib/live-types";
 import { computePlayoffs, computeRanking, currentRound, roundProgress } from "@/lib/ranking";
+import { computeAllianceRanking } from "@/lib/alliance";
 import { CopyChip } from "./CopyChip";
 import { ApprovalQueue } from "./ApprovalQueue";
 import { formatScore, formatValue, type ScoreFormat } from "@/lib/format";
@@ -33,7 +35,28 @@ export function Overview({ initial, codes, isAdmin, canEditScores, site }: Props
   const qualTotal = progress.reduce((a, p) => a + p.total, 0);
   const top = ranking[0];
 
-  const kpis = [
+  // Alianças: a classificação e o progresso vêm das partidas.
+  const alliance = s.alliance;
+  const aRanking = useMemo(
+    () => (alliance ? computeAllianceRanking(s.teams, s.matches.map((m) => ({ ...m, final: m.status === "final" })), alliance.config) : []),
+    [alliance, s.teams, s.matches],
+  );
+  const nextMatch = s.matches.find((m) => m.status === "scheduled");
+  const finals = s.matches.filter((m) => m.status === "final").length;
+  const teamName = (id: string) => s.teams.find((t) => t.id === id)?.name ?? "?";
+
+  const kpis = alliance
+    ? [
+        { label: "EQUIPES", value: s.teams.length, icon: Users },
+        { label: "PARTIDAS", value: `${finals}/${s.matches.length}`, icon: ClipboardCheck },
+        { label: "PRÓXIMA", value: nextMatch ? `Q${nextMatch.number}` : s.matches.length ? "Concluídas" : "—", icon: Radio },
+        {
+          label: "LÍDER",
+          value: aRanking[0]?.played ? `${aRanking[0].team.name} · ${aRanking[0].score}${alliance.config.mode === "coop" ? " pts" : " RS"}` : "—",
+          icon: Trophy,
+        },
+      ]
+    : [
     { label: "EQUIPES", value: s.teams.length, icon: Users },
     { label: "NOTAS", value: `${qualScores}/${qualTotal}`, icon: ClipboardCheck },
     {
@@ -42,7 +65,7 @@ export function Overview({ initial, codes, isAdmin, canEditScores, site }: Props
       icon: Radio,
     },
     { label: "LÍDER", value: top && top.evaluated ? `${top.team.name} · ${formatValue(top.score, s.event.scoring)}` : "—", icon: Trophy },
-  ];
+      ];
 
   return (
     <div className="space-y-6">
@@ -81,6 +104,75 @@ export function Overview({ initial, codes, isAdmin, canEditScores, site }: Props
       <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
         <div className="space-y-6">
           <ApprovalQueue snapshot={s} canEdit={canEditScores} />
+          {alliance ? (
+            <>
+              <Panel
+                kicker={`/ ${finals} DE ${s.matches.length}`}
+                title="Partidas"
+                action={
+                  canEditScores && (
+                    <Link href={`/hub/${s.event.id}/partidas`} className="btn btn-ghost btn-xs">
+                      Gerenciar <ArrowRight size={13} />
+                    </Link>
+                  )
+                }
+              >
+                {s.matches.length ? (
+                  <>
+                    <progress className="progress progress-primary h-2" value={finals} max={Math.max(1, s.matches.length)} />
+                    <ul className="mt-3 divide-y divide-base-300 text-sm">
+                      {s.matches
+                        .filter((m) => m.status !== "final")
+                        .slice(0, 4)
+                        .map((m) => (
+                          <li key={m.id} className="flex items-center gap-3 py-2">
+                            <span className="w-10 font-mono font-bold">Q{m.number}</span>
+                            <span className="min-w-0 flex-1 truncate">
+                              <span className="text-error">{m.red.map((x) => teamName(x.teamId)).join(" + ")}</span>
+                              {m.blue.length > 0 && (
+                                <>
+                                  <span className="mx-1.5 opacity-40">×</span>
+                                  <span className="text-info">{m.blue.map((x) => teamName(x.teamId)).join(" + ")}</span>
+                                </>
+                              )}
+                            </span>
+                            {m.status === "pending" && <span className="font-mono text-[10px] text-warning">AGUARDANDO</span>}
+                          </li>
+                        ))}
+                    </ul>
+                  </>
+                ) : (
+                  <p className="text-sm text-base-content/60">
+                    Nenhuma partida ainda.{" "}
+                    {isAdmin && (
+                      <Link href={`/hub/${s.event.id}/partidas`} className="link">
+                        Gerar o cronograma
+                      </Link>
+                    )}
+                  </p>
+                )}
+              </Panel>
+              <Panel kicker="/ AO VIVO" title="Classificação">
+                <ol className="divide-y divide-base-300">
+                  {aRanking.slice(0, 10).map((r) => (
+                    <li key={r.team.id} className="flex items-center gap-3 py-2">
+                      <span className={`grid size-7 place-items-center rounded-tl-md rounded-br-md font-mono text-xs font-bold ${r.rank === 1 && r.played ? "bg-accent text-accent-content" : "bg-base-200"}`}>
+                        {r.played ? r.rank : "—"}
+                      </span>
+                      <span className="flex-1 truncate font-medium">{r.team.name}</span>
+                      {alliance.config.mode === "versus" && (
+                        <span className="font-mono text-xs text-base-content/50">
+                          {r.wins}-{r.losses}-{r.ties}
+                        </span>
+                      )}
+                      <span className="w-20 text-right font-mono font-bold tabular-nums">{r.played ? r.score : "—"}</span>
+                    </li>
+                  ))}
+                </ol>
+              </Panel>
+            </>
+          ) : (
+          <>
           <Panel kicker="/ PROGRESSO" title="Rodadas">
             {progress.length ? (
               <ul className="space-y-3">
@@ -136,6 +228,8 @@ export function Overview({ initial, codes, isAdmin, canEditScores, site }: Props
               <p className="text-sm text-base-content/60">Sem equipes.</p>
             )}
           </Panel>
+          </>
+          )}
 
           {playoffs.phase !== "off" && (
             <Panel kicker="/ PLAYOFFS" title={playoffs.phase === "waiting" ? "Aguardando as classificatórias" : "Chave"}>
@@ -199,7 +293,8 @@ export function Overview({ initial, codes, isAdmin, canEditScores, site }: Props
             )}
           </Panel>
 
-          {isAdmin && <MessageBox eventId={s.event.id} />}
+          {isAdmin && <ScreenMessageBox eventId={s.event.id} current={s.settings.screenMessage} clockOffset={clockOffset} />}
+          {isAdmin && <CameraQuickToggle eventId={s.event.id} camera={s.settings.camera} />}
 
           <Panel kicker="/ HISTÓRICO" title="Atividade" action={<Activity size={16} className="text-base-content/40" />}>
             <ActivityFeed items={s.activity} f={s.event.scoring} />
@@ -236,39 +331,6 @@ function DurationPicker({ eventId, current }: { eventId: string; current: number
   );
 }
 
-function MessageBox({ eventId }: { eventId: string }) {
-  const [text, setText] = useState("");
-  const [pending, start] = useTransition();
-  const { addToast } = useToast();
-  return (
-    <Panel kicker="/ LETREIRO" title="Aviso no telão" action={<Megaphone size={16} className="text-base-content/40" />}>
-      <form
-        className="flex gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          start(async () => {
-            const r = await postMessage(eventId, text);
-            if (!r.ok) return addToast(r.error, "error");
-            setText("");
-            addToast("Aviso enviado ao telão.", "success");
-          });
-        }}
-      >
-        <input
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          maxLength={140}
-          placeholder="Ex.: Intervalo de 15 minutos"
-          className="input input-bordered input-sm flex-1"
-        />
-        <button className="btn btn-sm btn-primary btn-square" disabled={pending || !text.trim()} aria-label="Enviar aviso">
-          <Send size={14} />
-        </button>
-      </form>
-    </Panel>
-  );
-}
-
 const fmt = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" });
 
 function ActivityFeed({ items, f }: { items: LiveActivity[]; f: ScoreFormat }) {
@@ -296,7 +358,10 @@ function ActivityFeed({ items, f }: { items: LiveActivity[]; f: ScoreFormat }) {
             text = "Evento criado";
             break;
           case "message":
-            text = `📣 ${p.message}`;
+            text = `• ${p.message}`;
+            break;
+          case "announcement":
+            text = `📣 Aviso no telão: ${p.message}`;
             break;
           case "score_pending":
             text = `⏳ ${p.team} · ${p.round}: ${v(p.points)} (aguardando aprovação)`;
@@ -306,6 +371,12 @@ function ActivityFeed({ items, f }: { items: LiveActivity[]; f: ScoreFormat }) {
             break;
           case "challenge_edit":
             text = `✎ ${p.message}`;
+            break;
+          case "match":
+            text = `⚔ ${p.message}`;
+            break;
+          case "match_pending":
+            text = `⏳ ${p.message} (aguardando aprovação)`;
             break;
           default:
             text = a.kind;

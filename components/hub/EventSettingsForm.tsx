@@ -24,7 +24,7 @@ export function EventSettingsForm({
   teamCount,
   isOwner,
 }: {
-  event: { id: string; name: string; season: string; format: "fll" | "custom" | "fll_fe" | "obr"; challengeName: string | null };
+  event: { id: string; name: string; season: string; format: "fll" | "custom" | "fll_fe" | "obr" | "alliance"; challengeName: string | null };
   rounds: Round[];
   settings: LiveSettings;
   teamCount: number;
@@ -77,6 +77,17 @@ export function EventSettingsForm({
                 {event.format === "obr" ? "Editar as 3 arenas e os desafios extras" : "Ver a súmula oficial"}
               </Link>
             </div>
+          ) : event.format === "alliance" ? (
+            <div className="mt-4 rounded-tl-xl rounded-br-xl bg-base-200/70 px-4 py-3 text-sm">
+              <p className="font-medium">Alianças: {event.challengeName ?? "súmula não montada"}</p>
+              <Link href={`/hub/${event.id}/desafio`} className="link text-xs">
+                Súmula, tamanho das alianças, RP e desempates
+              </Link>{" "}
+              ·{" "}
+              <Link href={`/hub/${event.id}/partidas`} className="link text-xs">
+                Partidas
+              </Link>
+            </div>
           ) : event.format === "custom" ? (
             <div className="mt-4 rounded-tl-xl rounded-br-xl bg-base-200/70 px-4 py-3 text-sm">
               <p className="font-medium">Desafio personalizado: {event.challengeName ?? "não montado"}</p>
@@ -100,6 +111,16 @@ export function EventSettingsForm({
         </Panel>
 
         <Panel kicker="/ REGRAS" title="Classificação e mesa">
+          {event.format === "alliance" ? (
+            <p className="rounded-tl-xl rounded-br-xl bg-base-200/70 px-4 py-3 text-sm text-base-content/70">
+              Nos eventos de alianças, a classificação vem das partidas (RP, vitórias e desempates) e é configurada no{" "}
+              <Link href={`/hub/${event.id}/desafio`} className="link">
+                construtor
+              </Link>
+              .
+            </p>
+          ) : (
+          <>
           <p className="kicker mb-2">Critério do ranking</p>
           <div className="grid grid-cols-3 gap-2">
             {(
@@ -123,6 +144,8 @@ export function EventSettingsForm({
               </button>
             ))}
           </div>
+          </>
+          )}
           {(event.format === "fll" || event.format === "fll_fe") && (
             <div className="mt-4">
               <SettingToggle
@@ -134,7 +157,7 @@ export function EventSettingsForm({
               />
             </div>
           )}
-          <div className="mt-4">
+          {event.format !== "alliance" && <div className="mt-4">
             <SettingToggle
               eventId={event.id}
               name="showOnlyCurrentRound"
@@ -142,11 +165,11 @@ export function EventSettingsForm({
               label="Mesa: liberar uma rodada por vez"
               hint="O Round 2 só abre quando todas as equipes tiverem nota no Round 1."
             />
-          </div>
+          </div>}
         </Panel>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
+      {event.format !== "alliance" && <div className="grid gap-6 xl:grid-cols-2">
         <Panel kicker={`/ ${quals.length} RODADAS`} title="Rodadas classificatórias">
           <ul className="space-y-2">
             {quals.map((r, i) => (
@@ -217,7 +240,7 @@ export function EventSettingsForm({
             </ul>
           )}
         </Panel>
-      </div>
+      </div>}
 
       <VolunteerAdminSettings eventId={event.id} settings={settings} />
 

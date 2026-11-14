@@ -297,7 +297,7 @@ export function ThemeEditor({
           <SettingToggle eventId={eventId} name="hideScoresUntilRoundEnds" value={settings.hideScoresUntilRoundEnds} label="Ocultar notas até a rodada terminar" hint="O público vê só ✓ até todas as equipes jogarem. Aplicado no servidor." />
           <SettingToggle eventId={eventId} name="celebrateScores" value={settings.celebrateScores} label="Comemorar cada nota" hint="Tela cheia com confete quando uma nota chega." />
           <SettingToggle eventId={eventId} name="highlightLeader" value={settings.highlightLeader} label="Destacar a líder" />
-          <SettingToggle eventId={eventId} name="showTicker" value={settings.showTicker} label="Letreiro de atividades" hint="Últimas notas e avisos rolando no rodapé." />
+          <SettingToggle eventId={eventId} name="showTicker" value={settings.showTicker} label="Letreiro de resultados" hint="Últimas notas e resultados rolando no rodapé. Avisos da organização aparecem em destaque, um de cada vez." />
           <SettingToggle eventId={eventId} name="showTimer" value={settings.showTimer} label="Mostrar cronômetro" />
           <SettingToggle eventId={eventId} name="showBrackets" value={settings.showBrackets} label="Mostrar chave dos playoffs" />
           <SettingToggle eventId={eventId} name="showTeamDetails" value={settings.showTeamDetails} label="Mostrar número e escola das equipes" hint="Desligue para um telão mais limpo ou por privacidade." />

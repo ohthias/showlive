@@ -2,15 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, ClipboardList, Gauge, KeyRound, Map as MapIcon, Palette, Settings2, Sparkles, Users } from "lucide-react";
+import { BookOpen, ClipboardList, Gauge, KeyRound, Map as MapIcon, NotebookPen, Palette, Settings2, Sparkles, Swords, Users } from "lucide-react";
 
 const ITEMS = [
   { href: "", label: "Visão geral", icon: Gauge, admin: false },
   { href: "/desafio", label: "Desafio", icon: Sparkles, admin: true, only: "custom" },
+  { href: "/desafio", label: "Súmula e alianças", icon: Sparkles, admin: true, only: "alliance" },
   { href: "/desafio", label: "Regras", icon: BookOpen, admin: false, only: "fll_fe" },
   { href: "/arenas", label: "Arenas e extras", icon: MapIcon, admin: true, only: "obr" },
   { href: "/equipes", label: "Equipes", icon: Users, admin: true },
-  { href: "/pontuacoes", label: "Pontuações", icon: ClipboardList, admin: true, scoresEditor: true },
+  { href: "/pontuacoes", label: "Pontuações", icon: ClipboardList, admin: true, scoresEditor: true, not: "alliance" },
+  { href: "/partidas", label: "Partidas", icon: Swords, admin: true, scoresEditor: true, only: "alliance" },
+  { href: "/avaliacao", label: "Avaliação", icon: NotebookPen, admin: false },
   { href: "/telao", label: "Telão", icon: Palette, admin: true },
   { href: "/acessos", label: "Acessos", icon: KeyRound, admin: true },
   { href: "/configuracoes", label: "Configurações", icon: Settings2, admin: true },
@@ -31,7 +34,7 @@ export function EventNav({
   const base = `/hub/${eventId}`;
   return (
     <nav aria-label="Seções do evento" className="flex gap-1 overflow-x-auto lg:flex-col">
-      {ITEMS.filter((i) => (isAdmin || !i.admin || ("scoresEditor" in i && canEditScores)) && (!("only" in i) || i.only === format)).map(({ href, label, icon: Icon }) => {
+      {ITEMS.filter((i) => (isAdmin || !i.admin || ("scoresEditor" in i && canEditScores)) && (!("only" in i) || i.only === format) && (!("not" in i) || i.not !== format)).map(({ href, label, icon: Icon }) => {
         const full = base + href;
         const active = href ? path.startsWith(full) : path === base;
         return (

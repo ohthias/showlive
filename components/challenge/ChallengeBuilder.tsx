@@ -39,6 +39,8 @@ import {
 } from "@/lib/challenge";
 import { formatScore } from "@/lib/format";
 import { ChallengeSheet } from "./ChallengeSheet";
+import { AllianceConfigPanel } from "./AllianceConfigPanel";
+import { challengeGroups } from "@/lib/alliance-config";
 import { CustomScoreForm } from "./CustomScoreForm";
 
 type Mode =
@@ -101,8 +103,10 @@ export function ChallengeBuilder({ initial, mode, eventName }: { initial: Challe
     if (error) return addToast(error, "error");
     if (!asTemplate && mode.kind === "event" && mode.scored > 0) {
       const ok = await confirm({
-        title: "Já existem notas neste evento",
-        message: `${mode.scored} nota(s) foram calculadas com a versão anterior e não serão recalculadas. A mudança vale para as próximas avaliações.`,
+        title: ch.alliance ? "Já existem partidas com resultado" : "Já existem notas neste evento",
+        message: ch.alliance
+          ? `O placar das ${mode.scored} partida(s) já lançada(s) será recalculado com a nova súmula, e a classificação usa as regras novas na hora.`
+          : `${mode.scored} nota(s) foram calculadas com a versão anterior e não serão recalculadas. A mudança vale para as próximas avaliações.`,
         confirmLabel: "Salvar mesmo assim",
       });
       if (ok === false) return;
@@ -214,6 +218,9 @@ export function ChallengeBuilder({ initial, mode, eventName }: { initial: Challe
 
       {tab === "build" && (
         <div className="space-y-5">
+          {ch.alliance ? (
+            <AllianceConfigPanel value={ch.alliance} groups={challengeGroups(ch)} onChange={(alliance) => patch({ alliance })} />
+          ) : (
           <Panel kicker="/ 1 · TIPO" title="Que tipo de desafio é?">
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
               {(Object.keys(CHALLENGE_TYPES) as ChallengeType[]).map((t) => {
@@ -240,6 +247,7 @@ export function ChallengeBuilder({ initial, mode, eventName }: { initial: Challe
               })}
             </div>
           </Panel>
+          )}
 
           <div className="grid gap-5 xl:grid-cols-[1.2fr_1fr]">
             <Panel kicker="/ 2 · IDENTIDADE" title="Nome e objetivo" action={<Icon size={16} className="text-base-content/40" />}>
@@ -277,7 +285,7 @@ export function ChallengeBuilder({ initial, mode, eventName }: { initial: Challe
                   <button
                     key={d}
                     type="button"
-                    disabled={ch.type === "time"}
+                    disabled={ch.type === "time" || !!ch.alliance}
                     onClick={() => patch({ scoring: { ...ch.scoring, direction: d } })}
                     className={`btn ${cornerBtn} ${ch.scoring.direction === d ? "btn-neutral" : "btn-outline border-base-300"}`}
                   >
@@ -388,6 +396,7 @@ export function ChallengeBuilder({ initial, mode, eventName }: { initial: Challe
                   item={item}
                   type={ch.type}
                   unit={ch.scoring.unit}
+                  groups={challengeGroups(ch)}
                   onChange={(p) => patchItem(item.id, p)}
                   onUp={() => patch({ items: move(ch.items, i, -1) })}
                   onDown={() => patch({ items: move(ch.items, i, 1) })}
@@ -402,7 +411,13 @@ export function ChallengeBuilder({ initial, mode, eventName }: { initial: Challe
 
           <Panel
             kicker={`/ 6 · PENALIDADES (${ch.penalties.length})`}
-            title={ch.scoring.direction === "lower" ? "Penalidades (somam ao resultado)" : "Penalidades (descontam do resultado)"}
+            title={
+              ch.alliance?.penaltiesTo === "opponent" && ch.alliance.mode === "versus"
+                ? "Penalidades (viram pontos da aliança adversária)"
+                : ch.scoring.direction === "lower"
+                  ? "Penalidades (somam ao resultado)"
+                  : "Penalidades (descontam do resultado)"
+            }
             action={
               <button
                 type="button"
@@ -505,6 +520,7 @@ function ItemEditor({
   item,
   type,
   unit,
+  groups,
   onChange,
   onUp,
   onDown,
@@ -515,6 +531,7 @@ function ItemEditor({
   item: ChallengeItem;
   type: ChallengeType;
   unit: string;
+  groups: string[];
   onChange: (p: Partial<ChallengeItem>) => void;
   onUp: () => void;
   onDown: () => void;
@@ -628,13 +645,29 @@ function ItemEditor({
         </div>
       )}
 
-      <input
-        value={item.description ?? ""}
-        maxLength={240}
-        onChange={(e) => onChange({ description: e.target.value || undefined })}
-        placeholder="Descrição para a mesa (opcional)"
-        className="input input-ghost input-xs mt-2 ml-9 w-[calc(100%-2.25rem)] text-base-content/70"
-      />
+      <div className="mt-2 ml-9 grid gap-2 sm:grid-cols-[1fr_200px]">
+        <input
+          value={item.description ?? ""}
+          maxLength={240}
+          onChange={(e) => onChange({ description: e.target.value || undefined })}
+          placeholder="Descrição para a mesa (opcional)"
+          className="input input-ghost input-xs w-full text-base-content/70"
+        />
+        <input
+          value={item.group ?? ""}
+          maxLength={80}
+          list={`groups-${item.id}`}
+          onChange={(e) => onChange({ group: e.target.value || undefined })}
+          placeholder="Grupo (ex.: Autônomo)"
+          className="input input-bordered input-xs w-full"
+          aria-label="Grupo do item"
+        />
+        <datalist id={`groups-${item.id}`}>
+          {groups.map((g) => (
+            <option key={g} value={g} />
+          ))}
+        </datalist>
+      </div>
     </li>
   );
 }

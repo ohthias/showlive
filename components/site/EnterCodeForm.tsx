@@ -2,14 +2,16 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { AlertCircle, ArrowRight, ClipboardCheck, Tv } from "lucide-react";
+import { AlertCircle, ArrowRight, ClipboardCheck, NotebookPen, Tv } from "lucide-react";
 import { joinMesa, lookupCode, type CodeLookup } from "@/app/actions/access";
+import { joinBanca } from "@/app/actions/judging";
 import { cornerBtn } from "@/components/ui/brand";
 
 /**
- * Um campo só para os dois tipos de código:
+ * Um campo só para os três tipos de código:
  *  - código do evento → abre o telão;
- *  - código da mesa   → pede o nome do voluntário e abre a mesa.
+ *  - código da mesa   → pede o nome do voluntário e abre a mesa;
+ *  - código da sala   → pede o nome do avaliador e abre a sala de avaliação.
  */
 export function EnterCodeForm({ initialCode = "", compact = false }: { initialCode?: string; compact?: boolean }) {
   const router = useRouter();
@@ -34,27 +36,30 @@ export function EnterCodeForm({ initialCode = "", compact = false }: { initialCo
     e.preventDefault();
     setError("");
     start(async () => {
-      const res = await joinMesa(code, name);
+      const res = found?.kind === "judge" ? await joinBanca(code, name) : await joinMesa(code, name);
       if (res && !res.ok) setError(res.error);
     });
   };
 
-  if (found?.kind === "referee") {
+  if (found?.kind === "referee" || found?.kind === "judge") {
+    const judge = found.kind === "judge";
     return (
       <form onSubmit={submitName} className="space-y-4">
         <div className="flex items-start gap-3 rounded-tl-xl rounded-br-xl border border-secondary/30 bg-secondary/10 p-4">
-          <ClipboardCheck className="mt-0.5 shrink-0 text-secondary" size={20} />
+          {judge ? <NotebookPen className="mt-0.5 shrink-0 text-secondary" size={20} /> : <ClipboardCheck className="mt-0.5 shrink-0 text-secondary" size={20} />}
           <div className="text-sm">
             <p className="font-bold">
               {found.label} · {found.eventName}
             </p>
-            <p className="text-base-content/65">Código de mesa de arbitragem. Como você se chama?</p>
+            <p className="text-base-content/65">
+              {judge ? "Código de sala de avaliação. Como você se chama?" : "Código de mesa de arbitragem. Como você se chama?"}
+            </p>
           </div>
         </div>
         <input
           autoFocus
           className="input input-lg input-bordered w-full"
-          placeholder="Seu nome (aparece no histórico das notas)"
+          placeholder={judge ? "Seu nome (aparece nas fichas de avaliação)" : "Seu nome (aparece no histórico das notas)"}
           value={name}
           maxLength={30}
           onChange={(e) => setName(e.target.value)}
@@ -65,7 +70,7 @@ export function EnterCodeForm({ initialCode = "", compact = false }: { initialCo
             Voltar
           </button>
           <button className={`btn btn-secondary btn-lg flex-1 ${cornerBtn}`} disabled={pending || name.trim().length < 2}>
-            {pending ? <span className="loading loading-spinner" /> : <>Abrir a mesa <ArrowRight size={18} /></>}
+            {pending ? <span className="loading loading-spinner" /> : <>{judge ? "Abrir a sala" : "Abrir a mesa"} <ArrowRight size={18} /></>}
           </button>
         </div>
       </form>
@@ -100,7 +105,7 @@ export function EnterCodeForm({ initialCode = "", compact = false }: { initialCo
       </button>
       {!compact && (
         <p className="flex items-center justify-center gap-2 text-xs text-base-content/50">
-          <Tv size={13} /> Código do evento abre o telão · código da mesa abre a arbitragem
+          <Tv size={13} /> Evento abre o telão · mesa abre a arbitragem · sala abre a avaliação
         </p>
       )}
     </form>

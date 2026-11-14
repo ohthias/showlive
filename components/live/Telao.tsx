@@ -18,6 +18,9 @@ import {
 } from "@/lib/ranking";
 import { FONTS, fontCss, isVideo, numFontCss, resolveTvStyle, sanitizeTheme, type TvStyle } from "@/lib/themes";
 import { Bracket } from "./Bracket";
+import { AllianceBoard } from "./AllianceBoard";
+import { CameraFeed, CameraMenu, useLocalCamera } from "./CameraFeed";
+import { ScreenBanner } from "./ScreenBanner";
 import { TimerDisplay } from "./TimerDisplay";
 import { QrBadge } from "./QrBadge";
 import { useWakeLock } from "@/hooks/useWakeLock";
@@ -106,6 +109,26 @@ export function Telao({ initial, preview = false }: { initial: LiveSnapshot; pre
   }, []);
   const toggleFull = () => (document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen());
 
+  /* ------------------------------------------------------- câmera */
+  const cam = s.settings.camera;
+  const [localCam, setLocalCam] = useLocalCamera(s.event.id);
+  // Câmera do aparelho só liga onde o operador ativou; transmissão por link aparece em todas as telas.
+  const camOn = cam.enabled && (cam.source === "url" || preview || localCam.use);
+  // Um só player por vez (a câmera local não deve abrir duas vezes): decide pelo tamanho da tela.
+  const [desktop, setDesktop] = useState<boolean | null>(null);
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 768px)");
+    const on = () => setDesktop(mq.matches);
+    on();
+    mq.addEventListener("change", on);
+    return () => mq.removeEventListener("change", on);
+  }, []);
+  const camMobile = camOn && desktop === false;
+  const camDesk = camOn && desktop === true;
+  const camFeed = (extra = "") => <CameraFeed camera={cam} deviceId={localCam.deviceId} preview={preview} className={extra} />;
+  const pipWidth = { s: "22vw", m: "30vw", l: "38vw" }[cam.size];
+  const pipPos = { br: "bottom-24 right-6", bl: "bottom-24 left-6", tr: "top-6 right-6", tl: "top-6 left-6" }[cam.corner];
+
   const statusBadge =
     s.event.status === "live" ? "AO VIVO" : s.event.status === "finished" ? "RESULTADO FINAL" : "EM PREPARAÇÃO";
 
@@ -160,7 +183,8 @@ export function Telao({ initial, preview = false }: { initial: LiveSnapshot; pre
                 {statusBadge}
               </span>
               <span className="opacity-60">
-                {s.event.format === "obr" ? "OBR" : s.event.format === "custom" ? "DESAFIO" : "FLL"} · {s.event.seasonLabel.toUpperCase()}
+                {s.event.format === "obr" ? "OBR" : s.event.format === "custom" ? "DESAFIO" : s.event.format === "alliance" ? "ALIANÇAS" : "FLL"} ·{" "}
+                {s.event.seasonLabel.toUpperCase()}
               </span>
               {preview && (
                 <span className="tv-r border border-current/30 px-2 py-1">PRÉVIA · {s.event.code ? "AO VIVO" : "FORA DO AR"}</span>
@@ -188,6 +212,11 @@ export function Telao({ initial, preview = false }: { initial: LiveSnapshot; pre
           )}
 
           <div className={`ml-auto flex items-center gap-1 opacity-40 transition hover:opacity-100 md:ml-0 ${preview ? "hidden" : ""}`}>
+            {cam.enabled && cam.source === "local" && (
+              <span className="hidden md:block">
+                <CameraMenu pref={localCam} onChange={setLocalCam} />
+              </span>
+            )}
             <button type="button" onClick={toggleFull} className="btn btn-ghost btn-sm btn-square text-current" aria-label="Tela cheia">
               {full ? <Minimize size={18} /> : <Expand size={18} />}
             </button>
@@ -196,6 +225,10 @@ export function Telao({ initial, preview = false }: { initial: LiveSnapshot; pre
             </Link>
           </div>
         </header>
+
+        {!(camDesk && cam.layout === "full") && (
+          <ScreenBanner message={s.settings.screenMessage} clockOffset={clockOffset} accent={accent} bg={bg} secondary={style.secondary} />
+        )}
 
         {/* ------------------------------------------ progresso */}
         {quals.length > 0 && (
@@ -226,8 +259,34 @@ export function Telao({ initial, preview = false }: { initial: LiveSnapshot; pre
 
         {/* ------------------------------------------- conteúdo */}
         <main className="mt-5 flex-1">
+          {/* Câmera no celular: sempre no fluxo, acima da classificação. */}
+          {camMobile && <div className="mb-5">{camFeed()}</div>}
+          {camDesk && cam.layout === "full" ? (
+            <div className="relative">
+              {camFeed("mx-auto max-h-[calc(100dvh-16rem)]")}
+              <ScreenBanner message={s.settings.screenMessage} clockOffset={clockOffset} accent={accent} bg={bg} secondary={style.secondary} overlay />
+            </div>
+          ) : null}
+          <div
+            className={
+              camDesk && cam.layout === "full"
+                ? "hidden"
+                : camDesk && cam.layout === "split"
+                  ? "md:grid md:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)] md:items-start md:gap-6"
+                  : ""
+            }
+          >
+          <div className="min-w-0">
           {s.teams.length === 0 ? (
             <Waiting text="As equipes ainda estão sendo cadastradas." />
+          ) : s.alliance ? (
+            <AllianceBoard
+              snapshot={s}
+              medals={style.medals}
+              showDetails={s.settings.showTeamDetails}
+              highlight={s.settings.highlightLeader}
+              rowsPerPage={Math.round(Math.max(5, s.settings.rowsPerPage) * (style.layout === "compact" ? 1.5 : 1))}
+            />
           ) : (
             <>
               {/* Celular: lista completa com busca */}
@@ -279,12 +338,20 @@ export function Telao({ initial, preview = false }: { initial: LiveSnapshot; pre
               </div>
             </>
           )}
+          </div>
+          {camDesk && cam.layout === "split" && <div className="sticky top-6">{camFeed()}</div>}
+          </div>
+          {camDesk && cam.layout === "pip" && (
+            <div className={`fixed z-20 ${pipPos}`} style={{ width: pipWidth }}>
+              {camFeed("shadow-2xl")}
+            </div>
+          )}
         </main>
 
         {s.settings.showTicker && <Ticker items={s.activity} accent={accent} bg={bg} f={f} />}
 
         {s.settings.showQrCode && s.event.code && !preview && (
-          <div className="fixed bottom-24 right-6 z-20">
+          <div className={`fixed bottom-24 z-20 ${camOn && cam.layout === "pip" && cam.corner === "br" ? "left-6" : "right-6"}`}>
             <QrBadge code={s.event.code} fg={bg} bg={text} />
           </div>
         )}
@@ -752,6 +819,7 @@ function describe(a: LiveActivity, f: ScoreFormat) {
     case "score_void":
       return `${p.team} vai repetir: ${p.round}`;
     case "message":
+    case "match":
       return p.message ?? "";
     default:
       return "";
