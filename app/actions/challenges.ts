@@ -11,6 +11,7 @@ import { newId, sanitizeChallenge, type Challenge } from "@/lib/challenge";
 import { defaultLeague, sanitizeLeague, type ObrLeague } from "@/lib/obr";
 import { nudge } from "@/lib/live-hub";
 import { DEFAULT_PREFS, type UserPrefs } from "@/lib/prefs";
+import { rescoreMatches } from "@/lib/matches";
 
 function validate(input: unknown): Challenge {
   try {
@@ -24,11 +25,15 @@ function validate(input: unknown): Challenge {
 export async function saveEventChallenge(eventId: string, input: unknown) {
   return run(async () => {
     const { event } = await requireEventRole(eventId, "admin");
-    if (event.format !== "custom") throw new UserError("Este evento usa as regras oficiais da liga.");
+    if (event.format !== "custom" && event.format !== "alliance") throw new UserError("Este evento usa as regras oficiais da liga.");
     const challenge = validate(input);
+    if (event.format === "alliance" && !challenge.alliance) throw new UserError("Eventos de alianças precisam da configuração das alianças.");
+    if (event.format === "custom" && challenge.alliance) throw new UserError("Este evento não é de alianças.");
     const db = await getDb();
     const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(scores).where(eq(scores.eventId, eventId));
     await db.update(events).set({ challenge }).where(eq(events.id, eventId));
+    // Alianças: o placar das partidas já lançadas é refeito com a súmula nova.
+    if (event.format === "alliance") await rescoreMatches({ ...event, challenge });
     if (n > 0) {
       await db.insert(activity).values({ eventId, kind: "challenge_edit", payload: { message: `Desafio alterado com ${n} nota(s) já lançada(s)` } });
     }
@@ -131,7 +136,7 @@ export async function savePreferences(patch: Partial<UserPrefs>) {
     if (clean.defaultRounds !== undefined) clean.defaultRounds = Math.min(8, Math.max(1, Math.round(clean.defaultRounds)));
     if (clean.defaultTimerSec !== undefined) clean.defaultTimerSec = Math.min(3600, Math.max(10, Math.round(clean.defaultTimerSec)));
     if (clean.defaultMesaCount !== undefined) clean.defaultMesaCount = Math.min(10, Math.max(1, Math.round(clean.defaultMesaCount)));
-    if (clean.defaultFormat && !["fll", "fll_fe", "obr", "custom"].includes(clean.defaultFormat)) delete clean.defaultFormat;
+    if (clean.defaultFormat && !["fll", "fll_fe", "obr", "custom", "alliance"].includes(clean.defaultFormat)) delete clean.defaultFormat;
     if (clean.defaultRankingMode && !["best", "sum"].includes(clean.defaultRankingMode)) delete clean.defaultRankingMode;
 
     const db = await getDb();

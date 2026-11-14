@@ -1,7 +1,7 @@
 import { eq, sql } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
-import { scores } from "@/db/schema";
+import { matches, scores } from "@/db/schema";
 import { ChallengeBuilder } from "@/components/challenge/ChallengeBuilder";
 import { ChallengeSheet } from "@/components/challenge/ChallengeSheet";
 import { blankChallenge } from "@/lib/challenge";
@@ -22,9 +22,12 @@ export default async function ChallengePage({ params }: { params: Promise<{ even
       </div>
     );
   }
-  if (event.format !== "custom") notFound();
+  if (event.format !== "custom" && event.format !== "alliance") notFound();
   const db = await getDb();
-  const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(scores).where(eq(scores.eventId, event.id));
+  const [{ n }] =
+    event.format === "alliance"
+      ? await db.select({ n: sql<number>`count(*)::int` }).from(matches).where(sql`${matches.eventId} = ${event.id} and ${matches.status} <> 'scheduled'`)
+      : await db.select({ n: sql<number>`count(*)::int` }).from(scores).where(eq(scores.eventId, event.id));
   return (
     <ChallengeBuilder
       initial={event.challenge ?? blankChallenge("missions", event.name)}

@@ -11,12 +11,13 @@ import {
   eventMembers,
   eventSettings,
   events,
+  matches,
   rounds,
   scores,
   teams,
   userPreferences,
 } from "@/db/schema";
-import { blankChallenge, CHALLENGE_PRESETS, CHALLENGE_TYPES, type Challenge, type ChallengeType } from "@/lib/challenge";
+import { blankChallenge, CHALLENGE_PRESETS, CHALLENGE_TYPES, sanitizeChallenge, type Challenge, type ChallengeType } from "@/lib/challenge";
 import { clearLiveCodes, generateLiveCodes } from "@/lib/code-lifecycle";
 import { mergePrefs } from "@/lib/prefs";
 import { futureEditionChallenge } from "@/lib/future-edition";
@@ -27,13 +28,21 @@ import { uniqueCode } from "@/lib/unique-code";
 import { nudge } from "@/lib/live-hub";
 import { isSeason } from "@/lib/missions";
 import { THEME_PRESETS, themeForSeason } from "@/lib/themes";
+import { findAlliancePreset } from "@/lib/alliance-presets";
 
 export interface CreateEventInput {
   name: string;
-  format: "fll" | "fll_fe" | "obr" | "custom";
+  format: "fll" | "fll_fe" | "obr" | "custom" | "alliance";
   season?: string;
-  /** Desafio personalizado: modelo pronto (preset), template salvo, ou em branco por tipo. */
-  source?: { kind: "preset"; id: string } | { kind: "template"; id: string } | { kind: "blank"; type: ChallengeType };
+  /**
+   * Desafio personalizado: modelo pronto (preset), template salvo, ou em branco por tipo.
+   * Alianças: modelo de alianças (alliance-preset) ou template salvo com alianças.
+   */
+  source?:
+    | { kind: "preset"; id: string }
+    | { kind: "template"; id: string }
+    | { kind: "blank"; type: ChallengeType }
+    | { kind: "alliance-preset"; id: string };
   roundCount: number;
 }
 
@@ -54,7 +63,8 @@ export async function createEvent(input: CreateEventInput) {
     let challenge: Challenge | null = null;
     let templateId: string | null = null;
     let league: ObrLeague | null = null;
-    const format = (["fll", "fll_fe", "obr", "custom"] as const).includes(input.format) ? input.format : "fll";
+    let timerSec: number | null = null;
+    const format = (["fll", "fll_fe", "obr", "custom", "alliance"] as const).includes(input.format) ? input.format : "fll";
 
     if (format === "fll_fe") {
       season = "bioglow-fe";
@@ -62,6 +72,24 @@ export async function createEvent(input: CreateEventInput) {
     } else if (format === "obr") {
       season = "obr-resgate";
       league = defaultLeague();
+    } else if (format === "alliance") {
+      season = "alliance";
+      const src = input.source ?? { kind: "alliance-preset", id: "ftc" };
+      if (src.kind === "template") {
+        const [tpl] = await db
+          .select()
+          .from(challengeTemplates)
+          .where(and(eq(challengeTemplates.id, src.id), eq(challengeTemplates.ownerId, userId)))
+          .limit(1);
+        if (!tpl?.definition.alliance) throw new UserError("Template de alianças não encontrado.");
+        challenge = sanitizeChallenge(tpl.definition);
+        templateId = tpl.id;
+      } else {
+        const preset = findAlliancePreset(src.kind === "alliance-preset" ? src.id : "ftc");
+        if (!preset) throw new UserError("Modelo não encontrado.");
+        challenge = sanitizeChallenge(structuredClone(preset.challenge));
+        timerSec = preset.timerSec;
+      }
     } else if (format === "custom") {
       const src = input.source ?? { kind: "blank", type: "missions" as ChallengeType };
       if (src.kind === "preset") {
@@ -75,10 +103,13 @@ export async function createEvent(input: CreateEventInput) {
           .where(and(eq(challengeTemplates.id, src.id), eq(challengeTemplates.ownerId, userId)))
           .limit(1);
         if (!tpl) throw new UserError("Template não encontrado.");
+        if (tpl.definition.alliance) throw new UserError("Este template é de alianças: escolha o formato Alianças.");
         challenge = tpl.definition;
         templateId = tpl.id;
-      } else {
+      } else if (src.kind === "blank") {
         challenge = blankChallenge(src.type in CHALLENGE_TYPES ? src.type : "missions", name);
+      } else {
+        throw new UserError("Modelo não encontrado.");
       }
     } else {
       season = input.season && isSeason(input.season) ? input.season : prefs.defaultSeason;
@@ -103,7 +134,7 @@ export async function createEvent(input: CreateEventInput) {
         league,
         theme,
         // OBR: rodada de 5 minutos.
-        timerDurationSec: format === "obr" ? 300 : Math.min(3600, Math.max(10, prefs.defaultTimerSec)),
+        timerDurationSec: format === "obr" ? 300 : (timerSec ?? Math.min(3600, Math.max(10, prefs.defaultTimerSec))),
       })
       .returning({ id: events.id });
 
@@ -116,7 +147,10 @@ export async function createEvent(input: CreateEventInput) {
         showTimer: prefs.defaultShowTimer,
         celebrateScores: prefs.defaultCelebrate,
       }),
-      db.insert(rounds).values(
+      // Alianças: sem rodadas — a classificação vem das partidas.
+      format === "alliance"
+        ? Promise.resolve()
+        : db.insert(rounds).values(
         league
           ? // OBR: uma rodada por arena.
             league.arenas.map((a, i) => ({ eventId: event.id, name: `Rodada ${i + 1}`, position: i + 1, meta: { arenaId: a.id } }))
@@ -174,6 +208,7 @@ export async function setEventStatus(eventId: string, status: "draft" | "live" |
       const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(teams).where(eq(teams.eventId, eventId));
       if (!n) throw new UserError("Cadastre pelo menos uma equipe antes de colocar o evento ao vivo.");
       if (event.format === "custom" && !event.challenge) throw new UserError("Monte o desafio antes de ir ao vivo.");
+      if (event.format === "alliance" && !event.challenge?.alliance) throw new UserError("Monte a súmula das alianças antes de ir ao vivo.");
       if (event.format === "obr") {
         try {
           sanitizeLeague(event.league);
@@ -212,6 +247,11 @@ export async function resetScores(eventId: string) {
     const { userId } = await requireEventRole(eventId, "admin");
     const db = await getDb();
     await db.delete(scores).where(eq(scores.eventId, eventId));
+    // Alianças: as partidas continuam no cronograma, só os resultados somem.
+    await db
+      .update(matches)
+      .set({ status: "scheduled", result: null, redScore: null, blueScore: null, submittedBy: null, submittedByLabel: null, confirmedByTeams: false })
+      .where(eq(matches.eventId, eventId));
     await db.insert(activity).values({ eventId, kind: "scores_reset", payload: { by: userId } });
     nudge(eventId);
     revalidatePath(`/hub/${eventId}`, "layout");

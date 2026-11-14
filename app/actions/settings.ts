@@ -11,6 +11,7 @@ import type { LiveSettings } from "@/lib/live-types";
 import { getEventById } from "@/lib/snapshot";
 import { sanitizeTheme } from "@/lib/themes";
 import { timerRemaining } from "@/lib/timer";
+import { cleanMessage, MESSAGE_DURATIONS, sanitizeCamera, type CameraSettings, type ScreenMessageTone } from "@/lib/screen";
 
 const BOOL_KEYS = [
   "showOnlyCurrentRound",
@@ -105,18 +106,64 @@ export async function updateTheme(eventId: string, theme: Partial<EventTheme>) {
   });
 }
 
-/** Mensagem rápida no letreiro do telão ("Intervalo de 15 minutos"). */
-export async function postMessage(eventId: string, message: string) {
+/**
+ * Aviso no telão ("Intervalo de 15 minutos"). Só existe um aviso por vez:
+ * enviar outro substitui o atual. Pode sumir sozinho depois de N minutos.
+ */
+export async function postMessage(eventId: string, message: string, opts: { tone?: ScreenMessageTone; minutes?: number } = {}) {
   return run(async () => {
     await requireEventRole(eventId, "admin");
-    const text = message.replace(/\s+/g, " ").trim().slice(0, 140);
-    if (!text) throw new UserError("Escreva a mensagem.");
+    const text = cleanMessage(message);
+    if (!text) throw new UserError("Escreva o aviso.");
+    const tone: ScreenMessageTone = opts.tone === "alert" || opts.tone === "celebrate" ? opts.tone : "info";
+    const minutes = (MESSAGE_DURATIONS as readonly number[]).includes(Number(opts.minutes)) ? Number(opts.minutes) : 0;
+    const now = Date.now();
+    const screenMessage = { text, tone, at: now, until: minutes ? now + minutes * 60_000 : null };
     const db = await getDb();
-    await db.insert(activity).values({ eventId, kind: "message", payload: { message: text } });
-    // atividade não tem gatilho: força a revisão pelo próprio evento
-    await db.update(events).set({ updatedAt: new Date() }).where(eq(events.id, eventId));
+    await db
+      .insert(eventSettings)
+      .values({ eventId, screenMessage })
+      .onConflictDoUpdate({ target: eventSettings.eventId, set: { screenMessage, updatedAt: new Date() } });
+    // Fica no histórico do hub (não aparece no letreiro do telão).
+    await db.insert(activity).values({ eventId, kind: "announcement", payload: { message: text } });
     nudge(eventId);
+    revalidatePath(`/hub/${eventId}`, "layout");
+    return screenMessage;
+  });
+}
+
+/** Tira o aviso do telão. */
+export async function clearMessage(eventId: string) {
+  return run(async () => {
+    await requireEventRole(eventId, "admin");
+    const db = await getDb();
+    await db.update(eventSettings).set({ screenMessage: null, updatedAt: new Date() }).where(eq(eventSettings.eventId, eventId));
+    nudge(eventId);
+    revalidatePath(`/hub/${eventId}`, "layout");
     return null;
+  });
+}
+
+/** Câmera no telão: liga/desliga e configura (fonte, link, layout). */
+export async function updateCamera(eventId: string, patch: Partial<CameraSettings>) {
+  return run(async () => {
+    await requireEventRole(eventId, "admin");
+    const db = await getDb();
+    const [row] = await db.select({ camera: eventSettings.camera }).from(eventSettings).where(eq(eventSettings.eventId, eventId)).limit(1);
+    let camera: CameraSettings;
+    try {
+      camera = sanitizeCamera(patch, sanitizeCamera(row?.camera ?? {}));
+    } catch (err) {
+      throw new UserError((err as Error).message);
+    }
+    if (camera.enabled && camera.source === "url" && !camera.url) throw new UserError("Cole o link da transmissão antes de ligar.");
+    await db
+      .insert(eventSettings)
+      .values({ eventId, camera })
+      .onConflictDoUpdate({ target: eventSettings.eventId, set: { camera, updatedAt: new Date() } });
+    nudge(eventId);
+    revalidatePath(`/hub/${eventId}`, "layout");
+    return camera;
   });
 }
 

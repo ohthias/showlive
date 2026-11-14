@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { Mesa, type MesaForm } from "@/components/mesa/Mesa";
+import { AllianceMesa } from "@/components/mesa/AllianceMesa";
 import { loadPrefs } from "@/lib/hub-data";
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
@@ -28,6 +29,22 @@ export default async function MesaPage({ params }: { params: Promise<{ code: str
   if (!scorer) redirect("/entrar");
 
   const snapshot = await buildSnapshot(event, "staff");
+  const { userId } = await auth();
+  const prefs = scorer.via === "member" && userId ? await loadPrefs(userId) : null;
+
+  if (event.format === "alliance" && event.challenge?.alliance) {
+    return (
+      <AllianceMesa
+        initial={snapshot}
+        challenge={event.challenge}
+        scorerLabel={scorer.label}
+        via={scorer.via}
+        confirmBeforeSend={prefs?.mesaConfirmBeforeSend ?? true}
+        keepScreenOn={prefs?.mesaKeepScreenOn ?? true}
+      />
+    );
+  }
+
   let form: MesaForm;
   if (event.format === "obr") {
     const db = await getDb();
@@ -40,8 +57,6 @@ export default async function MesaPage({ params }: { params: Promise<{ code: str
     form = { kind: "fll", missions: getMissions(event.season) };
   }
   // Membro logado: aplica as preferências dele. Voluntário com código: padrão.
-  const { userId } = await auth();
-  const prefs = scorer.via === "member" && userId ? await loadPrefs(userId) : null;
   return (
     <Mesa
       initial={snapshot}

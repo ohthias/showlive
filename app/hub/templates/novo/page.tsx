@@ -2,10 +2,11 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { ChallengeBuilder } from "@/components/challenge/ChallengeBuilder";
 import { blankChallenge, CHALLENGE_PRESETS, CHALLENGE_TYPES, type ChallengeType } from "@/lib/challenge";
+import { findAlliancePreset } from "@/lib/alliance-presets";
 
-export default async function NewTemplatePage({ searchParams }: { searchParams: Promise<{ modelo?: string; tipo?: string }> }) {
-  const { modelo, tipo } = await searchParams;
-  const preset = CHALLENGE_PRESETS.find((p) => p.id === modelo)?.challenge;
+export default async function NewTemplatePage({ searchParams }: { searchParams: Promise<{ modelo?: string; tipo?: string; alianca?: string }> }) {
+  const { modelo, tipo, alianca } = await searchParams;
+  const preset = (alianca ? findAlliancePreset(alianca)?.challenge : undefined) ?? CHALLENGE_PRESETS.find((p) => p.id === modelo)?.challenge;
   const type = (tipo && tipo in CHALLENGE_TYPES ? tipo : "missions") as ChallengeType;
   const initial = preset ? structuredClone(preset) : blankChallenge(type);
   return (

@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
-import { ArrowLeft, LayoutTemplate, ListChecks, Plus, Ruler, Scale, Timer } from "lucide-react";
+import { ArrowLeft, LayoutTemplate, ListChecks, Plus, Ruler, Scale, Swords, Timer } from "lucide-react";
 import { TemplateActions } from "@/components/challenge/TemplateActions";
 import { cornerBtn, EmptyState, Panel } from "@/components/ui/brand";
 import { CHALLENGE_PRESETS, CHALLENGE_TYPES, type ChallengeType } from "@/lib/challenge";
 import { loadTemplates } from "@/lib/hub-data";
+import { ALLIANCE_PRESETS } from "@/lib/alliance-presets";
 
 export const dynamic = "force-dynamic";
 const ICON = { missions: ListChecks, time: Timer, judged: Scale, measure: Ruler } as const;
@@ -40,7 +41,7 @@ export default async function TemplatesPage() {
         ) : (
           <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {templates.map((t) => {
-              const I = ICON[t.type as ChallengeType] ?? ListChecks;
+              const I = t.definition.alliance ? Swords : (ICON[t.type as ChallengeType] ?? ListChecks);
               return (
                 <li key={t.id} className="flex flex-col rounded-tl-2xl rounded-br-2xl border border-base-300 p-4">
                   <div className="flex items-start gap-3">
@@ -52,7 +53,7 @@ export default async function TemplatesPage() {
                         {t.name}
                       </Link>
                       <p className="text-xs text-base-content/55">
-                        {CHALLENGE_TYPES[t.type as ChallengeType]?.label} · {t.definition.items.length} itens · editado {fmt.format(t.updatedAt)}
+                        {t.definition.alliance ? "Alianças" : CHALLENGE_TYPES[t.type as ChallengeType]?.label} · {t.definition.items.length} itens · editado {fmt.format(t.updatedAt)}
                       </p>
                     </div>
                   </div>
@@ -83,6 +84,24 @@ export default async function TemplatesPage() {
               </li>
             );
           })}
+        </ul>
+      </Panel>
+
+      <Panel kicker="/ ALIANÇAS" title="Modelos de partidas com alianças">
+        <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          {ALLIANCE_PRESETS.map((p) => (
+            <li key={p.id}>
+              <Link
+                href={`/hub/templates/novo?alianca=${p.id}`}
+                className="group block h-full rounded-tl-2xl rounded-br-2xl border border-base-300 p-4 transition hover:-translate-y-0.5 hover:border-base-content/40"
+              >
+                <Swords size={18} className="text-base-content/50 group-hover:text-error" />
+                <p className="mt-2 font-bold">{p.label}</p>
+                <p className="font-mono text-[10px] tracking-wider text-base-content/50">{p.short.toUpperCase()}</p>
+                <p className="mt-2 line-clamp-3 text-xs text-base-content/60">{p.description}</p>
+              </Link>
+            </li>
+          ))}
         </ul>
       </Panel>
     </main>

@@ -15,7 +15,7 @@ const ROLE_LABEL = { owner: "Dono", admin: "Admin", scorer: "Apurador" } as cons
 export default async function HubHome() {
   const { userId } = await auth();
   const [me, events, prefs, templates] = await Promise.all([getIdentity(), listMyEvents(userId!), loadPrefs(userId!), loadTemplates(userId!)]);
-  const tpls = templates.map((t) => ({ id: t.id, name: t.name, type: t.type }));
+  const tpls = templates.map((t) => ({ id: t.id, name: t.name, type: t.type, alliance: !!t.definition.alliance }));
   const live = events.filter((e) => e.status === "live").length;
 
   return (

@@ -5,7 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
-import { accessCodes, eventMembers, events, rounds } from "@/db/schema";
+import { accessCodes, eventMembers, events, judgingRooms, rounds } from "@/db/schema";
 import { requireEventRole } from "@/lib/access";
 import { cleanText, run, UserError } from "@/lib/action";
 import { normalizeCode } from "@/lib/codes";
@@ -166,7 +166,8 @@ export async function removeMember(eventId: string, memberId: string) {
 
 export type CodeLookup =
   | { kind: "public"; eventCode: string; eventName: string }
-  | { kind: "referee"; eventName: string; label: string };
+  | { kind: "referee"; eventName: string; label: string }
+  | { kind: "judge"; eventName: string; label: string };
 
 export async function lookupCode(raw: string) {
   return run<CodeLookup>(async () => {
@@ -192,6 +193,18 @@ export async function lookupCode(raw: string) {
       if (mesa.status !== "live") throw new UserError("Este evento não está ao vivo no momento.");
       if (!mesa.active) throw new UserError("Este código de mesa foi desativado pela organização.");
       return { kind: "referee", eventName: mesa.eventName, label: mesa.label };
+    }
+
+    const [room] = await db
+      .select({ label: judgingRooms.name, active: judgingRooms.active, eventName: events.name, status: events.status })
+      .from(judgingRooms)
+      .innerJoin(events, eq(events.id, judgingRooms.eventId))
+      .where(eq(judgingRooms.code, code))
+      .limit(1);
+    if (room) {
+      if (room.status !== "live") throw new UserError("Este evento não está ao vivo no momento.");
+      if (!room.active) throw new UserError("Este código de sala foi desativado pela organização.");
+      return { kind: "judge", eventName: room.eventName, label: room.label };
     }
     throw new UserError("Código inválido ou expirado. Os códigos mudam a cada vez que o evento fica ao vivo — confira com a organização.");
   });

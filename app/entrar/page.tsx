@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { ClipboardCheck, Tv } from "lucide-react";
+import { ClipboardCheck, NotebookPen, Tv } from "lucide-react";
 import { EnterCodeForm } from "@/components/site/EnterCodeForm";
 import { AnimatedBackground, ByRoboStage, Logo } from "@/components/ui/brand";
 import { ThemeController } from "@/components/ui/ThemeController";
@@ -44,6 +44,14 @@ export default async function EnterPage({ searchParams }: { searchParams: Promis
               </span>
               <span className="text-sm">
                 <b>Código da mesa</b> — arbitragem para os juízes. Não precisa de conta.
+              </span>
+            </li>
+            <li className="flex items-start gap-3">
+              <span className="grid size-9 shrink-0 place-items-center rounded-tl-lg rounded-br-lg bg-primary/10 text-primary">
+                <NotebookPen size={18} />
+              </span>
+              <span className="text-sm">
+                <b>Código da sala</b> — avaliação por rubricas (projeto, design, valores). Não precisa de conta.
               </span>
             </li>
           </ul>
