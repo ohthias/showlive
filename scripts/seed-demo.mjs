@@ -128,5 +128,113 @@ for (const [i, n] of names4.entries()) {
   if (i < 3) await q("insert into scores (event_id, team_id, round_id, points, submitted_by, submitted_by_label) values ($1,$2,$3,$4,'seed','Mesa 1')", [ev4.id, t.id, rx, 8 + i * 1.37]);
 }
 
-console.log(JSON.stringify({ eventId: ev.id, codeId: code.id, customId: ev2.id, draftId: ev3.id, obrId: ev4.id }));
+// Avaliação por rubricas no DEMO26: 2 rubricas, 2 salas (códigos SALA22 e SALA33) e o cronograma.
+const levels = [
+  { value: 1, label: "Iniciante" },
+  { value: 2, label: "Em desenvolvimento" },
+  { value: 3, label: "Realizado" },
+  { value: 4, label: "Excepcional" },
+];
+const crit = (id, label, description) => ({ id, label, description });
+const rubricDefs = [
+  {
+    name: "Projeto de Inovação",
+    description: "Como a equipe pesquisou um problema real, criou uma solução e a compartilhou.",
+    sections: [
+      { id: "identify", title: "Identificar", criteria: [crit("ip_problem", "Problema definido com clareza", "Explica o problema e por que importa."), crit("ip_research", "Pesquisa", "Fontes variadas e especialistas.")] },
+      { id: "create", title: "Criar", criteria: [crit("ip_solution", "Solução e protótipo", "Solução original e bem representada.")] },
+      { id: "communicate", title: "Comunicar", criteria: [crit("ip_presentation", "Apresentação", "Clara, criativa e com impacto.")] },
+    ],
+  },
+  {
+    name: "Design do Robô",
+    description: "Estratégia, construção e programação do robô.",
+    sections: [
+      { id: "design", title: "Projetar", criteria: [crit("rd_strategy", "Estratégia de missões", "Objetivos claros e justificados."), crit("rd_build", "Construção", "Robusto e funcional.")] },
+      { id: "create", title: "Criar", criteria: [crit("rd_code", "Programação", "Código organizado, com sensores.")] },
+    ],
+  },
+];
+const rubricIds = [];
+for (const [i, r] of rubricDefs.entries()) {
+  const definition = { levels, sections: r.sections, commentFromLevel: 4, requireFeedback: true };
+  const { rows: [row] } = await q("insert into rubrics (event_id, name, description, definition, position) values ($1,$2,$3,$4,$5) returning id", [ev.id, r.name, r.description, JSON.stringify(definition), i + 1]);
+  rubricIds.push(row.id);
+}
+const roomIds = [];
+for (const [i, c] of ["SALA22", "SALA33"].entries()) {
+  const { rows: [row] } = await q("insert into judging_rooms (event_id, name, code) values ($1,$2,$3) returning id", [ev.id, `Sala ${i + 1}`, c]);
+  roomIds.push(row.id);
+}
+const day = new Date();
+day.setHours(9, 0, 0, 0);
+for (const [i, t] of teams.entries()) {
+  const startsAt = new Date(day.getTime() + Math.floor(i / 2) * 40 * 60000);
+  const { rows: [s] } = await q("insert into judging_sessions (event_id, team_id, room_id, starts_at, duration_min, status) values ($1,$2,$3,$4,30,$5) returning id", [ev.id, t, roomIds[i % 2], startsAt, i < 4 ? "done" : "scheduled"]);
+  if (i >= 4) continue;
+  // As 4 primeiras equipes já foram avaliadas.
+  for (const [k, rid] of rubricIds.entries()) {
+    const ids = rubricDefs[k].sections.flatMap((x) => x.criteria.map((c) => c.id));
+    const scores = Object.fromEntries(ids.map((id, j) => [id, 1 + ((i + j + k) % 3)]));
+    const total = Object.values(scores).reduce((a, b) => a + b, 0);
+    await q(
+      "insert into rubric_evaluations (event_id, session_id, team_id, rubric_id, scores, feedback, total, max_total, status, submitted_by, submitted_by_label) values ($1,$2,$3,$4,$5,$6,$7,$8,'submitted','seed','Sala · Demo')",
+      [ev.id, s.id, t, rid, JSON.stringify(scores), JSON.stringify({ strengths: "Equipe muito engajada.", improvements: "Documentar melhor os testes." }), total, ids.length * 4],
+    );
+  }
+}
+
+// Alianças (estilo FTC): FTC26, mesa FTCM22. Usa o modelo pronto (o Node remove os tipos do .ts).
+const { ALLIANCE_PRESETS } = await import(path.join(root, "lib/alliance-presets.ts"));
+const ftcPreset = ALLIANCE_PRESETS.find((p) => p.id === "ftc");
+const t5 = { preset: "ftc", colors: ["#111827", "#f97316", "#f9fafb"], background: null, blur: false };
+const { rows: [ev5] } = await q(
+  "insert into events (code, name, owner_id, format, season, challenge, status, theme, timer_duration_sec) values ('FTC226','Qualificatória FTC Nordeste','user_demo','alliance','alliance',$1,'live',$2,$3) returning id",
+  [JSON.stringify(ftcPreset.challenge), JSON.stringify(t5), ftcPreset.timerSec],
+);
+await q("insert into event_settings (event_id, show_timer) values ($1, true)", [ev5.id]);
+await q("insert into event_members (event_id, user_id, email, name, role) values ($1,'user_demo','demo@robostage.com.br','Demo','owner')", [ev5.id]);
+await q("insert into access_codes (event_id, code, label) values ($1,'FTCM22','Mesa 1')", [ev5.id]);
+const ftcNames = ["Engrenagem Azul", "Byte Force", "Titanium", "RoboJangada", "Mandacaru Mecha", "Circuito Norte", "Atlântica", "Farol Tech"];
+const ftcTeams = [];
+for (const [i, n] of ftcNames.entries()) {
+  const { rows: [t] } = await q("insert into teams (event_id, name, number) values ($1,$2,$3) returning id", [ev5.id, n, String(20000 + i * 311)]);
+  ftcTeams.push(t.id);
+}
+// 8 equipes, 4 partidas cada (8 partidas): pares que giram.
+const pairs = [[0, 1, 2, 3], [4, 5, 6, 7], [0, 2, 4, 6], [1, 3, 5, 7], [0, 5, 3, 6], [1, 4, 2, 7], [0, 7, 1, 6], [2, 5, 3, 4]];
+const ftcPts = { a_leave: 3, a_high: 7, a_low: 3, t_high: 5, t_low: 2, e_park: 5, e_lift: 20 };
+const groupOf = { a_leave: "Autônomo", a_high: "Autônomo", a_low: "Autônomo", t_high: "Teleoperado", t_low: "Teleoperado", e_park: "Fim de jogo", e_lift: "Fim de jogo" };
+const sideResult = (resp, oppResp) => {
+  const byGroup = { Autônomo: 0, Teleoperado: 0, "Fim de jogo": 0 };
+  let base = 0;
+  for (const [k, v] of Object.entries(resp)) {
+    if (!(k in ftcPts)) continue;
+    base += v * ftcPts[k];
+    byGroup[groupOf[k]] += v * ftcPts[k];
+  }
+  const pen = (r) => (r["pen:minor"] ?? 0) * 5 + (r["pen:major"] ?? 0) * 15;
+  const bonus = [];
+  if (byGroup["Autônomo"] >= 30) bonus.push("RP de autônomo");
+  if (byGroup["Fim de jogo"] >= 30) bonus.push("RP de fim de jogo");
+  return { responses: resp, base, penalty: pen(resp), byGroup, bonus, bonusRp: bonus.length, score: base + pen(oppResp) };
+};
+for (const [i, p] of pairs.entries()) {
+  const red = [{ teamId: ftcTeams[p[0]] }, { teamId: ftcTeams[p[1]] }];
+  const blue = [{ teamId: ftcTeams[p[2]] }, { teamId: ftcTeams[p[3]] }];
+  const at = new Date(Date.now() + (i - 5) * 7 * 60000);
+  if (i < 5) {
+    const r = { a_leave: 2, a_high: (i * 3) % 5, t_high: 6 + ((i * 7) % 9), t_low: (i * 5) % 7, e_park: 1, e_lift: i % 2, "pen:minor": i % 2 };
+    const b = { a_leave: 1 + (i % 2), a_high: (i * 2) % 4, t_high: 5 + ((i * 5) % 11), t_low: (i * 3) % 6, e_park: 2, e_lift: (i + 1) % 2 };
+    const result = { red: sideResult(r, b), blue: sideResult(b, r), flags: {} };
+    await q(
+      "insert into matches (event_id, number, scheduled_at, red, blue, status, red_score, blue_score, result, submitted_by, submitted_by_label) values ($1,$2,$3,$4,$5,'final',$6,$7,$8,'seed','Mesa 1')",
+      [ev5.id, i + 1, at, JSON.stringify(red), JSON.stringify(blue), result.red.score, result.blue.score, JSON.stringify(result)],
+    );
+  } else {
+    await q("insert into matches (event_id, number, scheduled_at, red, blue) values ($1,$2,$3,$4,$5)", [ev5.id, i + 1, at, JSON.stringify(red), JSON.stringify(blue)]);
+  }
+}
+
+console.log(JSON.stringify({ eventId: ev.id, codeId: code.id, customId: ev2.id, draftId: ev3.id, obrId: ev4.id, ftcId: ev5.id }));
 await client.close();

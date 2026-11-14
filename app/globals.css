@@ -249,19 +249,24 @@ body {
 @keyframes confetti-fall { to { transform: translate3d(var(--x, 0), 120vh, 0) rotate(var(--r, 540deg)); } }
 
 .score-pop { animation: score-pop .35s cubic-bezier(.2,1.6,.4,1); }
+
+/* Aviso de "atenção" no telão: pulso suave para chamar o olhar. */
+.tv-alert::after { content: ""; position: absolute; inset: 0; background: currentColor; opacity: 0; animation: tv-alert 1.6s ease-in-out infinite; pointer-events: none; }
+@keyframes tv-alert { 50% { opacity: .12; } }
 @keyframes score-pop { 0% { transform: scale(1.25); } 100% { transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .tv-row-enter, .tv-flash, .celebrate-in, .score-pop, .live-dot::before { animation: none !important; }
+  .tv-row-enter, .tv-flash, .celebrate-in, .score-pop, .live-dot::before, .tv-alert::after { animation: none !important; }
   .ticker-track { animation-duration: 120s; }
   .confetti-bit { display: none; }
 }
 
-/* Impressão do regulamento: só a folha. */
+/* Impressão do regulamento e do retorno da avaliação: só a folha. */
 @media print {
   body * { visibility: hidden; }
-  .challenge-sheet, .challenge-sheet * { visibility: visible; }
-  .challenge-sheet { position: absolute; inset: 0 auto auto 0; width: 100%; box-shadow: none; }
+  .challenge-sheet, .challenge-sheet *, .feedback-sheet, .feedback-sheet * { visibility: visible; }
+  .challenge-sheet, .feedback-sheet { position: absolute; inset: 0 auto auto 0; width: 100%; box-shadow: none; }
+  .feedback-sheet .print-break { break-before: page; }
 }
 
 /* Mesa: "botões grandes" (ajuste do aparelho do voluntário) */
