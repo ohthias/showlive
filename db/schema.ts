@@ -2,6 +2,9 @@ import { sql } from "drizzle-orm";
 import type { Challenge } from "@/lib/challenge-types";
 import type { UserPrefs } from "@/lib/prefs";
 import type { ObrLeague, RoundMeta } from "@/lib/obr-types";
+import type { AllianceSlot, MatchResult } from "@/lib/alliance-types";
+import type { CameraSettings, ScreenMessage } from "@/lib/screen";
+import type { EvaluationComments, EvaluationFeedback, EvaluationScores, RubricDefinition } from "@/lib/rubric-types";
 import {
   bigint,
   bigserial,
@@ -39,13 +42,16 @@ const timestamps = {
 /* ------------------------------------------------------------------ enums */
 
 export const eventStatusEnum = pgEnum("event_status", ["draft", "live", "finished"]);
-export const eventFormatEnum = pgEnum("event_format", ["fll", "custom", "fll_fe", "obr"]);
+export const eventFormatEnum = pgEnum("event_format", ["fll", "custom", "fll_fe", "obr", "alliance"]);
 export const memberRoleEnum = pgEnum("member_role", ["owner", "admin", "scorer"]);
 export const memberStatusEnum = pgEnum("member_status", ["active", "pending"]);
 export const roundKindEnum = pgEnum("round_kind", ["qualifying", "semifinal", "final", "extra"]);
 export const rankingModeEnum = pgEnum("ranking_mode", ["best", "sum", "best2"]);
 export const playoffFormatEnum = pgEnum("playoff_format", ["final", "semifinal"]);
 export const scoreStatusEnum = pgEnum("score_status", ["approved", "pending"]);
+export const judgingSessionStatusEnum = pgEnum("judging_session_status", ["scheduled", "in_progress", "done", "absent"]);
+export const matchStatusEnum = pgEnum("match_status", ["scheduled", "pending", "final"]);
+export const evaluationStatusEnum = pgEnum("evaluation_status", ["draft", "submitted"]);
 
 /* ----------------------------------------------------------------- events */
 
@@ -156,6 +162,18 @@ export const eventSettings = pgTable("event_settings", {
   showQrCode: boolean("show_qr_code").notNull().default(false),
   celebrateScores: boolean("celebrate_scores").notNull().default(true),
   rowsPerPage: integer("rows_per_page").notNull().default(10),
+  /** O aviso que está no telão agora (só um; enviar outro substitui). */
+  screenMessage: jsonb("screen_message").$type<ScreenMessage>(),
+  /** Câmera no telão (aparelho do telão ou link de transmissão). */
+  camera: jsonb("camera").$type<CameraSettings>(),
+
+  // Avaliação por rubricas (nunca aparece no telão)
+  /** Trava as avaliações: só admins alteram (fim do dia de avaliação). */
+  judgingLocked: boolean("judging_locked").notNull().default(false),
+  /** A classificação geral da avaliação inclui a partida (nota ÷ maior nota). */
+  judgingIncludeRobotGame: boolean("judging_include_robot_game").notNull().default(false),
+  /** Peso da partida na classificação geral (as rubricas têm o peso delas). */
+  judgingRobotGameWeight: doublePrecision("judging_robot_game_weight").notNull().default(1),
 
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -296,6 +314,39 @@ export const scores = pgTable(
   ],
 );
 
+/* ------------------------------------------ partidas de alianças (FTC) */
+
+/**
+ * Partidas do formato de alianças (events.format = "alliance"). Cada partida
+ * tem a aliança vermelha e, no modo versus, a azul; o resultado guarda a
+ * súmula de cada aliança e o placar recalculado no servidor (lib/alliance.ts).
+ */
+export const matches = pgTable(
+  "matches",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    /** Número da classificatória (Q1, Q2...). */
+    number: integer("number").notNull(),
+    field: text("field"),
+    scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
+    red: jsonb("red").$type<AllianceSlot[]>().notNull(),
+    blue: jsonb("blue").$type<AllianceSlot[]>().notNull().default(sql`'[]'::jsonb`),
+    /** scheduled = sem resultado · pending = aguardando aprovação · final = vale para o ranking. */
+    status: matchStatusEnum("status").notNull().default("scheduled"),
+    redScore: doublePrecision("red_score"),
+    blueScore: doublePrecision("blue_score"),
+    result: jsonb("result").$type<MatchResult>(),
+    confirmedByTeams: boolean("confirmed_by_teams").notNull().default(false),
+    submittedBy: text("submitted_by"),
+    submittedByLabel: text("submitted_by_label"),
+    ...timestamps,
+  },
+  (t) => [unique("matches_event_number_unique").on(t.eventId, t.number), index("matches_event_idx").on(t.eventId)],
+);
+
 /* --------------------------------------------------------- atividade */
 
 export type ActivityPayload = {
@@ -349,6 +400,115 @@ export const userPreferences = pgTable("user_preferences", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/* ------------------------------------- avaliação por rubricas (salas) */
+
+/**
+ * Rubricas do evento ("Projeto de Inovação", "Design do Robô"...).
+ * A definição (escala, seções, critérios) fica em jsonb; ver lib/rubric.ts.
+ */
+export const rubrics = pgTable(
+  "rubrics",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description"),
+    definition: jsonb("definition").$type<RubricDefinition>().notNull(),
+    /** Peso na classificação geral da avaliação. */
+    weight: doublePrecision("weight").notNull().default(1),
+    position: integer("position").notNull().default(0),
+    ...timestamps,
+  },
+  (t) => [unique("rubrics_event_name_unique").on(t.eventId, t.name), index("rubrics_event_idx").on(t.eventId)],
+);
+
+/**
+ * Salas de avaliação. Cada sala aplica algumas rubricas e, com o evento ao
+ * vivo, tem um código para os avaliadores entrarem sem conta (mesma regra
+ * dos códigos de mesa: nasce na ativação, some ao sair do ar).
+ */
+export const judgingRooms = pgTable(
+  "judging_rooms",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    /** Rubricas aplicadas nesta sala (vazio = todas do evento). */
+    rubricIds: jsonb("rubric_ids").$type<string[]>().notNull().default(sql`'[]'::jsonb`),
+    code: text("code"),
+    active: boolean("active").notNull().default(true),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    unique("judging_rooms_code_unique").on(t.code),
+    unique("judging_rooms_event_name_unique").on(t.eventId, t.name),
+    index("judging_rooms_event_idx").on(t.eventId),
+  ],
+);
+
+/** Horário de uma equipe em uma sala (o cronograma da avaliação). */
+export const judgingSessions = pgTable(
+  "judging_sessions",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    teamId: uuid("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    roomId: uuid("room_id").references(() => judgingRooms.id, { onDelete: "set null" }),
+    startsAt: timestamp("starts_at", { withTimezone: true }),
+    durationMin: integer("duration_min").notNull().default(30),
+    status: judgingSessionStatusEnum("status").notNull().default("scheduled"),
+    notes: text("notes"),
+    ...timestamps,
+  },
+  (t) => [index("judging_sessions_event_idx").on(t.eventId, t.startsAt), index("judging_sessions_room_idx").on(t.roomId)],
+);
+
+/** Uma rubrica preenchida para uma equipe em uma sessão. */
+export const rubricEvaluations = pgTable(
+  "rubric_evaluations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => judgingSessions.id, { onDelete: "cascade" }),
+    teamId: uuid("team_id")
+      .notNull()
+      .references(() => teams.id, { onDelete: "cascade" }),
+    rubricId: uuid("rubric_id")
+      .notNull()
+      .references(() => rubrics.id, { onDelete: "cascade" }),
+    scores: jsonb("scores").$type<EvaluationScores>().notNull().default(sql`'{}'::jsonb`),
+    comments: jsonb("comments").$type<EvaluationComments>().notNull().default(sql`'{}'::jsonb`),
+    feedback: jsonb("feedback").$type<EvaluationFeedback>().notNull().default(sql`'{}'::jsonb`),
+    /** Soma ponderada dos níveis e o máximo possível (recalculados no servidor). */
+    total: doublePrecision("total").notNull().default(0),
+    maxTotal: doublePrecision("max_total").notNull().default(0),
+    status: evaluationStatusEnum("status").notNull().default("draft"),
+    /** id Clerk, ou "room:<id>" quando veio de um código de sala. */
+    submittedBy: text("submitted_by").notNull(),
+    submittedByLabel: text("submitted_by_label").notNull(),
+    ...timestamps,
+  },
+  (t) => [
+    // Uma ficha por rubrica em cada sessão: dois avaliadores na mesma sala
+    // editam a mesma ficha em vez de duplicar.
+    unique("rubric_evaluations_session_rubric_unique").on(t.sessionId, t.rubricId),
+    index("rubric_evaluations_event_idx").on(t.eventId),
+  ],
+);
+
 export type EventRow = typeof events.$inferSelect;
 export type EventSettingsRow = typeof eventSettings.$inferSelect;
 export type TeamRow = typeof teams.$inferSelect;
@@ -358,3 +518,8 @@ export type MemberRow = typeof eventMembers.$inferSelect;
 export type AccessCodeRow = typeof accessCodes.$inferSelect;
 export type ActivityRow = typeof activity.$inferSelect;
 export type TemplateRow = typeof challengeTemplates.$inferSelect;
+export type RubricRow = typeof rubrics.$inferSelect;
+export type MatchRow = typeof matches.$inferSelect;
+export type JudgingRoomRow = typeof judgingRooms.$inferSelect;
+export type JudgingSessionRow = typeof judgingSessions.$inferSelect;
+export type RubricEvaluationRow = typeof rubricEvaluations.$inferSelect;
