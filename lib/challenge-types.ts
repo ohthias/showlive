@@ -4,6 +4,8 @@
  * (para reutilizar). Sem dependências: é importado pelo schema do banco.
  */
 
+import type { AllianceConfig } from "./alliance-types";
+
 export type ChallengeType = "missions" | "time" | "judged" | "measure";
 
 /**
@@ -67,6 +69,12 @@ export interface Challenge {
   items: ChallengeItem[];
   penalties: ChallengePenalty[];
   scoring: ChallengeScoring;
+  /**
+   * Formato de alianças (estilo FTC): presente nos eventos/templates em que a
+   * súmula é preenchida por aliança em partidas vermelha × azul (ou
+   * cooperativas). Ver lib/alliance.ts.
+   */
+  alliance?: AllianceConfig;
 }
 
 /** Respostas da mesa: { itemId: valor, "pen:penaltyId": ocorrências, "dnf": 1 }. */

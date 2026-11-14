@@ -1,5 +1,7 @@
 import type { ActivityPayload, EventTheme } from "@/db/schema";
 import type { ScoreFormat } from "./format";
+import type { CameraSettings, ScreenMessage } from "./screen";
+import type { AllianceConfig, AllianceResult, AllianceSlot, TeamMatchFlag } from "./alliance-types";
 
 /** Tudo o que uma tela ao vivo precisa. Serializável (vai pelo SSE). */
 export interface LiveSnapshot {
@@ -16,7 +18,7 @@ export interface LiveSnapshot {
     status: "draft" | "live" | "finished";
     theme: EventTheme;
     timer: TimerState;
-    format: "fll" | "custom" | "fll_fe" | "obr";
+    format: "fll" | "custom" | "fll_fe" | "obr" | "alliance";
     /** Como ler o valor das notas (pontos, segundos, cm...). */
     scoring: ScoreFormat;
     /** Só em desafios personalizados: nome, tipo e objetivo para o telão. */
@@ -27,6 +29,28 @@ export interface LiveSnapshot {
   teams: LiveTeam[];
   scores: LiveScore[];
   activity: LiveActivity[];
+  /** Formato de alianças: configuração e partidas (vazio nos outros formatos). */
+  alliance: { config: AllianceConfig; groups: string[] } | null;
+  matches: LiveMatch[];
+}
+
+export type LiveAllianceResult = Pick<AllianceResult, "score" | "base" | "penalty" | "byGroup" | "bonus" | "bonusRp">;
+
+export interface LiveMatch {
+  id: string;
+  number: number;
+  field: string | null;
+  /** Horário previsto (ms) ou null. */
+  at: number | null;
+  red: AllianceSlot[];
+  blue: AllianceSlot[];
+  /** Público nunca vê "pending": partida aguardando aprovação aparece como agendada. */
+  status: "scheduled" | "pending" | "final";
+  result: { red: LiveAllianceResult; blue: LiveAllianceResult | null; flags: Record<string, TeamMatchFlag> } | null;
+  updated: number;
+  /** Só staff: quem lançou. */
+  by?: string;
+  sb?: string;
 }
 
 export interface TimerState {
@@ -66,6 +90,9 @@ export interface LiveSettings {
   // Telão
   showTeamDetails: boolean;
   showQrCode: boolean;
+  /** Aviso atual da organização no telão (null = nenhum). */
+  screenMessage: ScreenMessage | null;
+  camera: CameraSettings;
 }
 
 export interface LiveRound {

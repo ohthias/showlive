@@ -8,6 +8,8 @@ import type {
   ItemKind,
 } from "./challenge-types";
 
+import { challengeGroups, sanitizeAlliance } from "./alliance-config";
+
 export type * from "./challenge-types";
 
 /* ------------------------------------------------------------- tipos */
@@ -369,7 +371,7 @@ export function sanitizeChallenge(input: unknown): Challenge {
   };
   if (type === "time") scoring.direction = "lower";
 
-  return {
+  const out: Challenge = {
     version: 1,
     type,
     name,
@@ -379,6 +381,13 @@ export function sanitizeChallenge(input: unknown): Challenge {
     penalties,
     scoring,
   };
+  // Alianças: súmula por aliança, sempre "maior vence" e sem item de tempo.
+  if (raw.alliance) {
+    if (type !== "missions" && type !== "judged") throw new Error("Desafios de alianças usam pontos (tipo Missões).");
+    out.scoring = { ...scoring, direction: "higher" };
+    out.alliance = sanitizeAlliance(raw.alliance, challengeGroups({ items }));
+  }
+  return out;
 }
 
 /** Faixa teórica do resultado — usada só como referência no regulamento. */

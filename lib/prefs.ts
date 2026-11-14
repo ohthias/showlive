@@ -4,7 +4,7 @@
  */
 export interface UserPrefs {
   // Evento novo
-  defaultFormat: "fll" | "fll_fe" | "obr" | "custom";
+  defaultFormat: "fll" | "fll_fe" | "obr" | "custom" | "alliance";
   defaultSeason: string;
   defaultRounds: number;
   defaultTheme: string;

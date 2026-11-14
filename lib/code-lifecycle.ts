@@ -1,7 +1,7 @@
 import "server-only";
 import { asc, eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
-import { accessCodes, events, userPreferences } from "@/db/schema";
+import { accessCodes, events, judgingRooms, userPreferences } from "@/db/schema";
 import { mergePrefs } from "./prefs";
 import { uniqueCode } from "./unique-code";
 
@@ -12,7 +12,7 @@ import { uniqueCode } from "./unique-code";
  *    sessão anterior nunca volta a funcionar);
  *  - são apagados quando o evento volta para preparação ou é encerrado.
  * As "mesas" (rótulo, ativa/inativa) continuam existindo fora do ar; só o
- * código delas some.
+ * código delas some. A mesma regra vale para as salas de avaliação.
  */
 export async function generateLiveCodes(eventId: string, ownerId: string) {
   const db = await getDb();
@@ -35,10 +35,16 @@ export async function generateLiveCodes(eventId: string, ownerId: string) {
   for (const s of slots) {
     await db.update(accessCodes).set({ code: await uniqueCode(), lastUsedAt: null }).where(eq(accessCodes.id, s.id));
   }
+  // Salas de avaliação não são criadas automaticamente: só ganham código as que existem.
+  const rooms = await db.select({ id: judgingRooms.id }).from(judgingRooms).where(eq(judgingRooms.eventId, eventId));
+  for (const r of rooms) {
+    await db.update(judgingRooms).set({ code: await uniqueCode(), lastUsedAt: null }).where(eq(judgingRooms.id, r.id));
+  }
 }
 
 export async function clearLiveCodes(eventId: string) {
   const db = await getDb();
   await db.update(events).set({ code: null }).where(eq(events.id, eventId));
   await db.update(accessCodes).set({ code: null }).where(eq(accessCodes.eventId, eventId));
+  await db.update(judgingRooms).set({ code: null }).where(eq(judgingRooms.eventId, eventId));
 }

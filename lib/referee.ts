@@ -47,22 +47,40 @@ function safeEqual(a: string, b: string) {
   return diff === 0;
 }
 
-export async function signRefereeSession(s: Omit<RefereeSession, "exp">): Promise<string> {
-  const body = b64url(enc.encode(JSON.stringify({ ...s, exp: Math.floor(Date.now() / 1000) + MAX_AGE })));
+async function signPayload<T extends object>(payload: T): Promise<string> {
+  const body = b64url(enc.encode(JSON.stringify({ ...payload, exp: Math.floor(Date.now() / 1000) + MAX_AGE })));
   return `${body}.${await hmac(body)}`;
 }
 
-export async function verifyRefereeToken(token: string | undefined): Promise<RefereeSession | null> {
+async function verifyPayload<T extends { exp: number }>(token: string | undefined): Promise<T | null> {
   if (!token) return null;
   const [body, sig] = token.split(".");
   if (!body || !sig || !safeEqual(sig, await hmac(body))) return null;
   try {
-    const data = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as RefereeSession;
-    if (!data.eventId || !data.codeId || !data.code || data.exp < Date.now() / 1000) return null;
+    const data = JSON.parse(Buffer.from(body, "base64url").toString("utf8")) as T;
+    if (!data || typeof data.exp !== "number" || data.exp < Date.now() / 1000) return null;
     return data;
   } catch {
     return null;
   }
+}
+
+const cookieOptions = () => ({
+  httpOnly: true,
+  sameSite: "lax" as const,
+  secure: process.env.NODE_ENV === "production",
+  path: "/",
+  maxAge: MAX_AGE,
+});
+
+export async function signRefereeSession(s: Omit<RefereeSession, "exp">): Promise<string> {
+  return signPayload(s);
+}
+
+export async function verifyRefereeToken(token: string | undefined): Promise<RefereeSession | null> {
+  const data = await verifyPayload<RefereeSession>(token);
+  if (!data?.eventId || !data.codeId || !data.code) return null;
+  return data;
 }
 
 export async function readRefereeSession(): Promise<RefereeSession | null> {
@@ -72,16 +90,52 @@ export async function readRefereeSession(): Promise<RefereeSession | null> {
 
 export async function writeRefereeSession(s: Omit<RefereeSession, "exp">) {
   const jar = await cookies();
-  jar.set(REFEREE_COOKIE, await signRefereeSession(s), {
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/",
-    maxAge: MAX_AGE,
-  });
+  jar.set(REFEREE_COOKIE, await signRefereeSession(s), cookieOptions());
 }
 
 export async function clearRefereeSession() {
   const jar = await cookies();
   jar.delete(REFEREE_COOKIE);
+}
+
+/* ------------------------------------------------ sala de avaliação */
+
+/**
+ * Sessão do avaliador (banca). Mesmo esquema da mesa, cookie separado: a
+ * pessoa pode estar numa sala de avaliação sem ter acesso à mesa e
+ * vice-versa. Vale para UMA sala e UM código.
+ */
+export const JUDGE_COOKIE = "sl_banca";
+
+export interface JudgeSession {
+  eventId: string;
+  roomId: string;
+  code: string;
+  name: string;
+  exp: number;
+}
+
+export async function signJudgeSession(s: Omit<JudgeSession, "exp">): Promise<string> {
+  return signPayload({ ...s, k: "judge" });
+}
+
+export async function verifyJudgeToken(token: string | undefined): Promise<JudgeSession | null> {
+  const data = await verifyPayload<JudgeSession & { k?: string }>(token);
+  if (!data || data.k !== "judge" || !data.eventId || !data.roomId || !data.code) return null;
+  return { eventId: data.eventId, roomId: data.roomId, code: data.code, name: data.name ?? "", exp: data.exp };
+}
+
+export async function readJudgeSession(): Promise<JudgeSession | null> {
+  const jar = await cookies();
+  return verifyJudgeToken(jar.get(JUDGE_COOKIE)?.value);
+}
+
+export async function writeJudgeSession(s: Omit<JudgeSession, "exp">) {
+  const jar = await cookies();
+  jar.set(JUDGE_COOKIE, await signJudgeSession(s), cookieOptions());
+}
+
+export async function clearJudgeSession() {
+  const jar = await cookies();
+  jar.delete(JUDGE_COOKIE);
 }

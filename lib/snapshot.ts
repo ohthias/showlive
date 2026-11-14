@@ -1,7 +1,9 @@
 import "server-only";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
-import { activity, eventSettings, events, rounds, scores, teams, type EventRow, type EventSettingsRow } from "@/db/schema";
+import { activity, eventSettings, events, matches, rounds, scores, teams, type EventRow, type EventSettingsRow } from "@/db/schema";
+import { challengeGroups } from "./alliance-config";
+import { DEFAULT_CAMERA } from "./screen";
 import { formatLabel, scoringOf } from "./event-format";
 import { computePlayoffs, roundProgress } from "./ranking";
 import type { LiveSettings, LiveSnapshot } from "./live-types";
@@ -49,6 +51,8 @@ export function toLiveSettings(s: EventSettingsRow | undefined, direction: "high
     scorersCanEdit: s?.scorersCanEdit ?? false,
     showTeamDetails: s?.showTeamDetails ?? true,
     showQrCode: s?.showQrCode ?? false,
+    screenMessage: s?.screenMessage ?? null,
+    camera: { ...DEFAULT_CAMERA, ...(s?.camera ?? {}) },
   };
 }
 
@@ -58,7 +62,8 @@ export function toLiveSettings(s: EventSettingsRow | undefined, direction: "high
  */
 export async function buildSnapshot(event: EventRow, audience: "public" | "staff"): Promise<LiveSnapshot> {
   const db = await getDb();
-  const [settingsRows, roundRows, teamRows, scoreRows, activityRows] = await Promise.all([
+  const isAlliance = event.format === "alliance" && !!event.challenge?.alliance;
+  const [settingsRows, roundRows, teamRows, scoreRows, activityRows, matchRows] = await Promise.all([
     db.select().from(eventSettings).where(eq(eventSettings.eventId, event.id)).limit(1),
     db.select().from(rounds).where(eq(rounds.eventId, event.id)).orderBy(asc(rounds.position)),
     db.select().from(teams).where(eq(teams.eventId, event.id)).orderBy(asc(teams.name)),
@@ -78,7 +83,33 @@ export async function buildSnapshot(event: EventRow, audience: "public" | "staff
       .from(scores)
       .where(eq(scores.eventId, event.id)),
     db.select().from(activity).where(eq(activity.eventId, event.id)).orderBy(desc(activity.id)).limit(20),
+    isAlliance ? db.select().from(matches).where(eq(matches.eventId, event.id)).orderBy(asc(matches.number)) : Promise.resolve([]),
   ]);
+
+  // Partidas: o público só vê resultados finais (pendentes de aprovação aparecem como agendadas).
+  const strip = (r: NonNullable<(typeof matchRows)[number]["result"]>["red"]) => ({
+    score: r.score,
+    base: r.base,
+    penalty: r.penalty,
+    byGroup: r.byGroup,
+    bonus: r.bonus,
+    bonusRp: r.bonusRp,
+  });
+  const liveMatches = matchRows.map((m) => {
+    const hidden = audience === "public" && m.status !== "final";
+    return {
+      id: m.id,
+      number: m.number,
+      field: m.field,
+      at: m.scheduledAt?.getTime() ?? null,
+      red: m.red,
+      blue: m.blue,
+      status: hidden ? ("scheduled" as const) : m.status,
+      result: m.result && !hidden ? { red: strip(m.result.red), blue: m.result.blue ? strip(m.result.blue) : null, flags: m.result.flags } : null,
+      updated: m.updatedAt.getTime(),
+      ...(audience === "staff" ? { by: m.submittedByLabel ?? undefined, sb: m.submittedBy ?? undefined } : {}),
+    };
+  });
 
   const scoring = scoringOf(event);
   const settings = toLiveSettings(settingsRows[0], scoring.direction);
@@ -144,7 +175,8 @@ export async function buildSnapshot(event: EventRow, audience: "public" | "staff
     settings.mesaNotice = null;
     // O nome de quem lançou fica só para a organização.
     liveActivity = liveActivity
-      .filter((a) => ["score", "score_edit", "score_void"].includes(a.kind) || a.kind === "message")
+      // Avisos não entram no letreiro: o telão mostra só o aviso atual (settings.screenMessage).
+      .filter((a) => ["score", "score_edit", "score_void", "match"].includes(a.kind))
       .map((a) => ({ ...a, payload: { ...a.payload, by: undefined } }));
   }
 
@@ -176,5 +208,7 @@ export async function buildSnapshot(event: EventRow, audience: "public" | "staff
     teams: liveTeams,
     scores: liveScores,
     activity: liveActivity,
+    alliance: isAlliance ? { config: event.challenge!.alliance!, groups: challengeGroups(event.challenge!) } : null,
+    matches: liveMatches,
   };
 }
