@@ -71,6 +71,13 @@
       "when": 1794864386345,
       "tag": "0009_live_codes",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1794865792401,
+      "tag": "0010_scenes",
+      "breakpoints": true
     }
   ]
 }

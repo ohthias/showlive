@@ -4,7 +4,7 @@ import { useMemo, useTransition } from "react";
 import Link from "next/link";
 import { Activity, ArrowRight, ClipboardCheck, Radio, Timer, Trophy, Tv, Users, WifiOff } from "lucide-react";
 import { controlTimer } from "@/app/actions/settings";
-import { CameraQuickToggle, ScreenMessageBox } from "./ScreenControls";
+import { CameraQuickToggle, SceneQuickSwitch, ScreenMessageBox } from "./ScreenControls";
 import { Bracket } from "@/components/live/Bracket";
 import { TimerControls } from "@/components/live/TimerControls";
 import { cornerBtn, EmptyState, Panel } from "@/components/ui/brand";
@@ -294,6 +294,7 @@ export function Overview({ initial, codes, isAdmin, canEditScores, site }: Props
           </Panel>
 
           {isAdmin && <ScreenMessageBox eventId={s.event.id} current={s.settings.screenMessage} clockOffset={clockOffset} />}
+          {isAdmin && <SceneQuickSwitch eventId={s.event.id} scenes={s.settings.scenes} />}
           {isAdmin && <CameraQuickToggle eventId={s.event.id} camera={s.settings.camera} />}
 
           <Panel kicker="/ HISTÓRICO" title="Atividade" action={<Activity size={16} className="text-base-content/40" />}>

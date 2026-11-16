@@ -4,6 +4,7 @@ import type { UserPrefs } from "@/lib/auth/prefs";
 import type { ObrLeague, RoundMeta } from "@/lib/obr/obr-types";
 import type { AllianceSlot, MatchResult } from "@/lib/competition/alliance-types";
 import type { CameraSettings, ScreenMessage } from "@/lib/live/screen";
+import type { ScenesState } from "@/lib/live/scenes";
 import type { EvaluationComments, EvaluationFeedback, EvaluationScores, RubricDefinition } from "@/lib/judging/rubric-types";
 import {
   bigint,
@@ -166,6 +167,8 @@ export const eventSettings = pgTable("event_settings", {
   screenMessage: jsonb("screen_message").$type<ScreenMessage>(),
   /** Câmera no telão (aparelho do telão ou link de transmissão). */
   camera: jsonb("camera").$type<CameraSettings>(),
+  /** Cenas do telão (até 4) e qual está no ar. null = só o modo automático. */
+  scenes: jsonb("scenes").$type<ScenesState>(),
 
   // Avaliação por rubricas (nunca aparece no telão)
   /** Trava as avaliações: só admins alteram (fim do dia de avaliação). */

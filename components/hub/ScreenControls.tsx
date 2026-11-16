@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from "react";
 import Link from "next/link";
-import { Megaphone, PartyPopper, Send, Settings2, TriangleAlert, Video, VideoOff, X } from "lucide-react";
-import { clearMessage, postMessage, updateCamera } from "@/app/actions/settings";
+import { Clapperboard, Megaphone, PartyPopper, Send, Settings2, TriangleAlert, Video, VideoOff, X } from "lucide-react";
+import { clearMessage, postMessage, setLiveScene, updateCamera } from "@/app/actions/settings";
+import { MAX_SCENES, type ScenesState } from "@/lib/live/scenes";
 import { Panel, Tag } from "@/components/ui/brand";
 import { useToast } from "@/components/ui/Toast";
 import { useServerClock } from "@/hooks/useLiveEvent";
@@ -158,6 +159,56 @@ export function CameraQuickToggle({ eventId, camera }: { eventId: string; camera
           }
         />
       </div>
+    </Panel>
+  );
+}
+
+/**
+ * Troca rápida de cena na Visão geral. Os dados chegam pelo snapshot ao vivo,
+ * então o destaque acompanha quem trocar a cena em outro aparelho.
+ */
+export function SceneQuickSwitch({ eventId, scenes }: { eventId: string; scenes: ScenesState }) {
+  const [pending, start] = useTransition();
+  const { addToast } = useToast();
+  const cut = (id: string | null) =>
+    start(async () => {
+      const r = await setLiveScene(eventId, id);
+      if (!r.ok) addToast(r.error, "error");
+    });
+  const options = [{ id: null as string | null, name: "Automática" }, ...scenes.items.map((s) => ({ id: s.id as string | null, name: s.name }))];
+  return (
+    <Panel
+      kicker="/ TELÃO"
+      title="Cena no ar"
+      action={
+        <Link href={`/hub/${eventId}/cenas`} className="btn btn-ghost btn-xs">
+          <Clapperboard size={13} /> Cenas
+        </Link>
+      }
+    >
+      {scenes.items.length === 0 ? (
+        <p className="text-sm text-base-content/60">
+          Crie até {MAX_SCENES} cenas (líderes, rodada ao vivo, intervalo, pódio…) e troque o telão com um clique.
+        </p>
+      ) : (
+        <div className="flex flex-wrap gap-2">
+          {options.map((o) => {
+            const on = scenes.activeId === o.id;
+            return (
+              <button
+                key={o.id ?? "auto"}
+                type="button"
+                disabled={pending || on}
+                onClick={() => cut(o.id)}
+                className={`btn btn-sm ${on ? "btn-error no-animation disabled:bg-error disabled:text-error-content" : "btn-outline"}`}
+              >
+                {on && <span className="live-dot" />}
+                {o.name}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </Panel>
   );
 }

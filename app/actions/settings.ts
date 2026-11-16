@@ -11,6 +11,7 @@ import type { LiveSettings } from "@/lib/live/live-types";
 import { getEventById } from "@/lib/live/snapshot";
 import { sanitizeTheme } from "@/lib/live/themes";
 import { timerRemaining } from "@/lib/live/timer";
+import { moveScene, removeScene, sanitizeScene, sanitizeScenes, upsertScene, type ScenesState } from "@/lib/live/scenes";
 import { cleanMessage, MESSAGE_DURATIONS, sanitizeCamera, type CameraSettings, type ScreenMessageTone } from "@/lib/live/screen";
 
 const BOOL_KEYS = [
@@ -215,5 +216,69 @@ export async function controlTimer(
     await db.update(events).set(set).where(and(eq(events.id, eventId)));
     nudge(eventId);
     return null;
+  });
+}
+
+/* ---------------------------------------------------------------- cenas */
+
+async function loadScenes(eventId: string) {
+  const db = await getDb();
+  const [row] = await db.select({ scenes: eventSettings.scenes }).from(eventSettings).where(eq(eventSettings.eventId, eventId)).limit(1);
+  return sanitizeScenes(row?.scenes);
+}
+
+async function storeScenes(eventId: string, scenes: ScenesState) {
+  const db = await getDb();
+  await db
+    .insert(eventSettings)
+    .values({ eventId, scenes })
+    .onConflictDoUpdate({ target: eventSettings.eventId, set: { scenes, updatedAt: new Date() } });
+  nudge(eventId);
+  revalidatePath(`/hub/${eventId}`, "layout");
+}
+
+/** Cria ou edita uma cena (até 4 por evento). Se ela estiver no ar, o telão muda na hora. */
+export async function saveScene(eventId: string, raw: unknown) {
+  return run(async () => {
+    await requireEventRole(eventId, "admin");
+    const scene = sanitizeScene(raw);
+    let next: ScenesState;
+    try {
+      next = upsertScene(await loadScenes(eventId), scene);
+    } catch (err) {
+      throw new UserError((err as Error).message);
+    }
+    await storeScenes(eventId, next);
+    return next;
+  });
+}
+
+export async function deleteScene(eventId: string, sceneId: string) {
+  return run(async () => {
+    await requireEventRole(eventId, "admin");
+    const next = removeScene(await loadScenes(eventId), sceneId);
+    await storeScenes(eventId, next);
+    return next;
+  });
+}
+
+export async function reorderScene(eventId: string, sceneId: string, dir: -1 | 1) {
+  return run(async () => {
+    await requireEventRole(eventId, "admin");
+    const next = moveScene(await loadScenes(eventId), sceneId, dir === -1 ? -1 : 1);
+    await storeScenes(eventId, next);
+    return next;
+  });
+}
+
+/** Coloca uma cena no ar (null = volta ao modo automático). */
+export async function setLiveScene(eventId: string, sceneId: string | null) {
+  return run(async () => {
+    await requireEventRole(eventId, "admin");
+    const current = await loadScenes(eventId);
+    if (sceneId && !current.items.some((s) => s.id === sceneId)) throw new UserError("Cena não encontrada.");
+    const next = { ...current, activeId: sceneId };
+    await storeScenes(eventId, next);
+    return next;
   });
 }

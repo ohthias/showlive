@@ -25,6 +25,9 @@ import { TimerDisplay } from "./TimerDisplay";
 import { QrBadge } from "./QrBadge";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { bestLabel, formatClockTime, formatScore, formatValue, type ScoreFormat } from "@/lib/competition/format";
+import { computeAllianceRanking } from "@/lib/competition/alliance";
+import { activeScene, sanitizeScene, sceneFlags, type Scene } from "@/lib/live/scenes";
+import { LeadersBoard, LowerThird, ScenePodium, SpotlightBoard, TitleCard, type SceneRow } from "./SceneViews";
 
 const SLIDE_MS = 12_000;
 const CELEBRATE_MS = 5_000;
@@ -39,7 +42,11 @@ const MEDALS = [
 type Slide = { kind: "ranking"; page: number } | { kind: "bracket" } | { kind: "podium" } | { kind: "extra"; roundId: string };
 type Moves = Map<string, number>;
 
-export function Telao({ initial, preview = false }: { initial: LiveSnapshot; preview?: boolean }) {
+/**
+ * `forceScene` (só na prévia do hub): id da cena a mostrar, ou "auto" para o
+ * modo automático. Sem ele, o telão mostra a cena que está no ar.
+ */
+export function Telao({ initial, preview = false, forceScene }: { initial: LiveSnapshot; preview?: boolean; forceScene?: string }) {
   const { snapshot: s, status, clockOffset } = useLiveEvent(initial, "public", { enabled: !preview });
   useWakeLock(!preview);
   const f = s.event.scoring;
@@ -56,8 +63,30 @@ export function Telao({ initial, preview = false }: { initial: LiveSnapshot; pre
     window.parent?.postMessage({ type: "showlive:preview-ready" }, window.location.origin);
     return () => window.removeEventListener("message", on);
   }, [preview, s.event.theme]);
+  /* Na aba Cenas, o hub manda a cena em edição (ou a escolhida) por postMessage. */
+  const [sceneOverride, setSceneOverride] = useState<{ scene: Scene | null } | null>(null);
+  useEffect(() => {
+    if (!preview) return;
+    const on = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin || e.data?.type !== "showlive:scene") return;
+      setSceneOverride({ scene: e.data.scene ? sanitizeScene(e.data.scene) : null });
+    };
+    window.addEventListener("message", on);
+    return () => window.removeEventListener("message", on);
+  }, [preview]);
+  const scene: Scene | null = sceneOverride
+    ? sceneOverride.scene
+    : forceScene !== undefined
+      ? forceScene === "auto"
+        ? null
+        : (s.settings.scenes.items.find((x) => x.id === forceScene) ?? null)
+      : activeScene(s.settings.scenes);
+  const flags = sceneFlags(scene, s.settings);
+
   const theme = draftTheme ?? s.event.theme;
-  const style = resolveTvStyle(theme);
+  const baseStyle = resolveTvStyle(theme);
+  // A cena pode trocar o estilo da tabela sem mexer no tema.
+  const style: TvStyle = scene?.layout === "ranking" && scene.board !== "theme" ? { ...baseStyle, layout: scene.board } : baseStyle;
   const [bg, accent, text] = theme.colors;
   const caps = FONTS.find((x) => x.id === style.font)?.caps;
 
@@ -69,6 +98,35 @@ export function Telao({ initial, preview = false }: { initial: LiveSnapshot; pre
   const flashed = useFlashedTeams(s);
   const moves = useRankMoves(ranking);
   const celebration = useCelebrations(s.activity, s.settings.celebrateScores);
+
+  /* Linhas genéricas para as disposições das cenas (rodadas ou alianças). */
+  const sceneRows: SceneRow[] = useMemo(() => {
+    const sub = (t: { number: string | null; organization: string | null }) =>
+      s.settings.showTeamDetails ? [t.number && `#${t.number}`, t.organization].filter(Boolean).join(" · ") || null : null;
+    if (s.alliance) {
+      const cfg = s.alliance.config;
+      return computeAllianceRanking(s.teams, s.matches.map((m) => ({ ...m, final: m.status === "final" })), cfg).map((r) => ({
+        id: r.team.id,
+        rank: r.rank,
+        name: r.team.name,
+        sub: sub(r.team),
+        value: r.evaluated ? (cfg.rankBy === "score_avg" ? `${r.avg.toFixed(1)}` : cfg.rankBy === "rp_total" ? `${r.rp} RP` : `${r.rs.toFixed(2)} RS`) : null,
+        detail: r.played ? `${r.wins}V · ${r.losses}D · ${r.ties}E` : null,
+        evaluated: r.evaluated > 0,
+      }));
+    }
+    return ranking.map((r) => ({
+      id: r.team.id,
+      rank: r.rank,
+      name: r.team.name,
+      sub: sub(r.team),
+      value: r.evaluated ? formatScore(r.score, f) : null,
+      detail: quals.length > 1 ? quals.map((q) => `${q.name}: ${r.byRound[q.id] == null ? "—" : formatValue(r.byRound[q.id] as number, f)}`).join("  ·  ") : null,
+      evaluated: r.evaluated > 0,
+    }));
+  }, [s, ranking, quals, f]);
+  const recentLines = useMemo(() => s.activity.map((a) => describe(a, f)).filter(Boolean), [s.activity, f]);
+  const currentProgress = current ? progress.find((p) => p.round.id === current.id) : null;
 
   /* --------------------------------------------------------- slides */
   const maxPerPage = Math.round(Math.max(5, s.settings.rowsPerPage) * (style.layout === "split" ? 2 : style.layout === "compact" ? 1.5 : 1));
@@ -113,7 +171,10 @@ export function Telao({ initial, preview = false }: { initial: LiveSnapshot; pre
   const cam = s.settings.camera;
   const [localCam, setLocalCam] = useLocalCamera(s.event.id);
   // Câmera do aparelho só liga onde o operador ativou; transmissão por link aparece em todas as telas.
-  const camOn = cam.enabled && (cam.source === "url" || preview || localCam.use);
+  const camAvailable = cam.enabled && (cam.source === "url" || preview || localCam.use);
+  const camScene = scene?.layout === "camera";
+  // Janela da câmera por cima da classificação só nas cenas que permitem.
+  const camOn = camAvailable && flags.cameraOverlay && !camScene;
   // Um só player por vez (a câmera local não deve abrir duas vezes): decide pelo tamanho da tela.
   const [desktop, setDesktop] = useState<boolean | null>(null);
   useEffect(() => {
@@ -128,6 +189,22 @@ export function Telao({ initial, preview = false }: { initial: LiveSnapshot; pre
   const camFeed = (extra = "") => <CameraFeed camera={cam} deviceId={localCam.deviceId} preview={preview} className={extra} />;
   const pipWidth = { s: "22vw", m: "30vw", l: "38vw" }[cam.size];
   const pipPos = { br: "bottom-24 right-6", bl: "bottom-24 left-6", tr: "top-6 right-6", tl: "top-6 left-6" }[cam.corner];
+
+  const controls = (
+    <>
+      {cam.enabled && cam.source === "local" && (
+        <span className="hidden md:block">
+          <CameraMenu pref={localCam} onChange={setLocalCam} />
+        </span>
+      )}
+      <button type="button" onClick={toggleFull} className="btn btn-ghost btn-sm btn-square text-current" aria-label="Tela cheia">
+        {full ? <Minimize size={18} /> : <Expand size={18} />}
+      </button>
+      <Link href="/entrar" className="btn btn-ghost btn-sm btn-square text-current" aria-label="Sair">
+        <LogOut size={18} />
+      </Link>
+    </>
+  );
 
   const statusBadge =
     s.event.status === "live" ? "AO VIVO" : s.event.status === "finished" ? "RESULTADO FINAL" : "EM PREPARAÇÃO";
@@ -171,7 +248,7 @@ export function Telao({ initial, preview = false }: { initial: LiveSnapshot; pre
 
       <div className="relative z-10 mx-auto flex min-h-dvh max-w-[1680px] flex-col px-4 py-4 md:px-10 md:py-6">
         {/* ------------------------------------------------ topo */}
-        <header className="flex flex-wrap items-center gap-x-6 gap-y-3">
+        <header className={`flex flex-wrap items-center gap-x-6 gap-y-3 ${flags.header ? "" : "md:hidden"}`}>
           {theme.logoUrl && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={theme.logoUrl} alt="" className="h-12 w-auto md:h-16" />
@@ -204,34 +281,26 @@ export function Telao({ initial, preview = false }: { initial: LiveSnapshot; pre
             )}
           </div>
 
-          {s.settings.showTimer && (
+          {flags.timer && scene?.layout !== "spotlight" && scene?.layout !== "title" && (
             <div className="tv-panel tv-r-lg flex items-center gap-3 px-4 py-1.5 md:block md:px-5 md:py-2 md:text-right">
               <p className="font-mono text-[10px] font-bold tracking-[0.2em] opacity-60">CRONÔMETRO</p>
               <TimerDisplay timer={s.event.timer} clockOffset={clockOffset} className="tv-num text-2xl md:text-6xl" />
             </div>
           )}
 
-          <div className={`ml-auto flex items-center gap-1 opacity-40 transition hover:opacity-100 md:ml-0 ${preview ? "hidden" : ""}`}>
-            {cam.enabled && cam.source === "local" && (
-              <span className="hidden md:block">
-                <CameraMenu pref={localCam} onChange={setLocalCam} />
-              </span>
-            )}
-            <button type="button" onClick={toggleFull} className="btn btn-ghost btn-sm btn-square text-current" aria-label="Tela cheia">
-              {full ? <Minimize size={18} /> : <Expand size={18} />}
-            </button>
-            <Link href="/entrar" className="btn btn-ghost btn-sm btn-square text-current" aria-label="Sair">
-              <LogOut size={18} />
-            </Link>
-          </div>
+          <div className={`ml-auto flex items-center gap-1 opacity-40 transition hover:opacity-100 md:ml-0 ${preview ? "hidden" : ""}`}>{controls}</div>
         </header>
+        {/* Cena sem cabeçalho: os controles do aparelho ficam num canto, quase invisíveis. */}
+        {!flags.header && !preview && (
+          <div className="fixed right-4 top-4 z-30 hidden items-center gap-1 opacity-0 transition hover:opacity-100 focus-within:opacity-100 md:flex">{controls}</div>
+        )}
 
-        {!(camDesk && cam.layout === "full") && (
+        {!(camDesk && cam.layout === "full") && !(camScene && camAvailable && desktop) && (
           <ScreenBanner message={s.settings.screenMessage} clockOffset={clockOffset} accent={accent} bg={bg} secondary={style.secondary} />
         )}
 
         {/* ------------------------------------------ progresso */}
-        {quals.length > 0 && (
+        {quals.length > 0 && (!scene || scene.layout === "ranking") && flags.header && (
           <div className="mt-5 flex flex-wrap gap-2">
             {progress.map((p) => {
               const active = current?.id === p.round.id;
@@ -276,7 +345,7 @@ export function Telao({ initial, preview = false }: { initial: LiveSnapshot; pre
                   : ""
             }
           >
-          <div className="min-w-0">
+          <div className={`min-w-0 ${scene && scene.layout !== "ranking" ? "md:hidden" : ""}`}>
           {s.teams.length === 0 ? (
             <Waiting text="As equipes ainda estão sendo cadastradas." />
           ) : s.alliance ? (
@@ -341,6 +410,51 @@ export function Telao({ initial, preview = false }: { initial: LiveSnapshot; pre
           </div>
           {camDesk && cam.layout === "split" && <div className="sticky top-6">{camFeed()}</div>}
           </div>
+          {/* Disposições das cenas (só no telão; no celular o público continua com a lista). */}
+          {scene && scene.layout !== "ranking" && desktop !== false && (
+            <div className="hidden md:block">
+              {scene.layout === "leaders" && <LeadersBoard rows={sceneRows} topN={scene.topN} medals={style.medals} />}
+              {scene.layout === "spotlight" && (
+                <SpotlightBoard
+                  snapshot={s}
+                  rows={sceneRows}
+                  topN={scene.topN}
+                  roundName={current?.name ?? null}
+                  progress={currentProgress ? { done: currentProgress.done, total: currentProgress.total } : null}
+                  recent={recentLines}
+                  clockOffset={clockOffset}
+                  medals={style.medals}
+                />
+              )}
+              {scene.layout === "title" && (
+                <TitleCard
+                  scene={scene}
+                  eventName={s.event.name}
+                  logoUrl={flags.header ? null : theme.logoUrl}
+                  code={preview ? (s.event.code ?? "PREVIA") : s.event.code}
+                  showQr={flags.qr}
+                  showTimer={flags.timer}
+                  snapshot={s}
+                  clockOffset={clockOffset}
+                  fg={text}
+                  bg={bg}
+                />
+              )}
+              {scene.layout === "podium" && <ScenePodium rows={sceneRows} medals={style.medals} champion={s.alliance ? null : playoffs.champion?.name} />}
+              {scene.layout === "camera" &&
+                (camAvailable ? (
+                  <div className="relative">
+                    <CameraFeed camera={{ ...cam, layout: "full" }} deviceId={localCam.deviceId} preview={preview} className="mx-auto max-h-[calc(100dvh-8rem)]" />
+                    <div className="absolute inset-x-6 bottom-6">
+                      <LowerThird rows={sceneRows} topN={scene.topN} medals={style.medals} label={cam.label ? cam.label.toUpperCase() : "CLASSIFICAÇÃO"} />
+                    </div>
+                    <ScreenBanner message={s.settings.screenMessage} clockOffset={clockOffset} accent={accent} bg={bg} secondary={style.secondary} overlay />
+                  </div>
+                ) : (
+                  <Waiting text={cam.enabled ? "Ative a câmera neste computador no menu de câmera (canto superior)." : "A câmera está desligada. Ligue em Telão › Câmera."} />
+                ))}
+            </div>
+          )}
           {camDesk && cam.layout === "pip" && (
             <div className={`fixed z-20 ${pipPos}`} style={{ width: pipWidth }}>
               {camFeed("shadow-2xl")}
@@ -348,9 +462,9 @@ export function Telao({ initial, preview = false }: { initial: LiveSnapshot; pre
           )}
         </main>
 
-        {s.settings.showTicker && <Ticker items={s.activity} accent={accent} bg={bg} f={f} />}
+        {flags.ticker && <Ticker items={s.activity} accent={accent} bg={bg} f={f} />}
 
-        {s.settings.showQrCode && s.event.code && !preview && (
+        {flags.qr && scene?.layout !== "title" && s.event.code && !preview && (
           <div className={`fixed bottom-24 z-20 ${camOn && cam.layout === "pip" && cam.corner === "br" ? "left-6" : "right-6"}`}>
             <QrBadge code={s.event.code} fg={bg} bg={text} />
           </div>

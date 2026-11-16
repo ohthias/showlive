@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BookOpen, ClipboardList, Gauge, KeyRound, Map as MapIcon, NotebookPen, Palette, Settings2, Sparkles, Swords, Users } from "lucide-react";
+import { BookOpen, Clapperboard, ClipboardList, Gauge, KeyRound, Map as MapIcon, NotebookPen, Palette, Settings2, Sparkles, Swords, Users } from "lucide-react";
 
 const ITEMS = [
   { href: "", label: "Visão geral", icon: Gauge, admin: false },
@@ -15,6 +15,7 @@ const ITEMS = [
   { href: "/partidas", label: "Partidas", icon: Swords, admin: true, scoresEditor: true, only: "alliance" },
   { href: "/avaliacao", label: "Avaliação", icon: NotebookPen, admin: false },
   { href: "/telao", label: "Telão", icon: Palette, admin: true },
+  { href: "/cenas", label: "Cenas", icon: Clapperboard, admin: true },
   { href: "/acessos", label: "Acessos", icon: KeyRound, admin: true },
   { href: "/configuracoes", label: "Configurações", icon: Settings2, admin: true },
 ];

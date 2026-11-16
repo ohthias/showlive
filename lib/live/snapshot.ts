@@ -4,6 +4,7 @@ import { getDb } from "@/db/client";
 import { activity, eventSettings, events, matches, rounds, scores, teams, type EventRow, type EventSettingsRow } from "@/db/schema";
 import { challengeGroups } from "../competition/alliance-config";
 import { DEFAULT_CAMERA } from "./screen";
+import { sanitizeScenes } from "./scenes";
 import { formatLabel, scoringOf } from "../competition/event-format";
 import { computePlayoffs, roundProgress } from "../competition/ranking";
 import type { LiveSettings, LiveSnapshot } from "./live-types";
@@ -53,6 +54,7 @@ export function toLiveSettings(s: EventSettingsRow | undefined, direction: "high
     showQrCode: s?.showQrCode ?? false,
     screenMessage: s?.screenMessage ?? null,
     camera: { ...DEFAULT_CAMERA, ...(s?.camera ?? {}) },
+    scenes: sanitizeScenes(s?.scenes),
   };
 }
 
