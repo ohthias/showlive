@@ -34,7 +34,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
  * precisa acompanhar o evento mesmo em preparação.
  */
 export async function resolveLiveKey(req: Request, key: string, wantsStaff: boolean) {
-  const { getEventByCode, getEventById } = await import("./snapshot");
+  const { getEventByCode, getEventById } = await import("../live/snapshot");
   if (UUID.test(key)) {
     if (!wantsStaff) return { event: null, audience: null } as const;
     const event = await getEventById(key);

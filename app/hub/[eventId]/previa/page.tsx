@@ -1,6 +1,6 @@
 import { Telao } from "@/components/live/Telao";
-import { loadHubEvent } from "@/lib/hub-data";
-import { buildSnapshot } from "@/lib/snapshot";
+import { loadHubEvent } from "@/lib/live/hub-data";
+import { buildSnapshot } from "@/lib/live/snapshot";
 
 export const dynamic = "force-dynamic";
 

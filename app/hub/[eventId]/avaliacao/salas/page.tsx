@@ -1,6 +1,6 @@
 import { RoomManager } from "@/components/judging/RoomManager";
-import { loadHubEvent } from "@/lib/hub-data";
-import { loadRooms, loadRubrics, loadSessions } from "@/lib/judging";
+import { loadHubEvent } from "@/lib/live/hub-data";
+import { loadRooms, loadRubrics, loadSessions } from "@/lib/judging/judging";
 
 export const dynamic = "force-dynamic";
 

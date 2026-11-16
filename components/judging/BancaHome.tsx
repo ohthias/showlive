@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, CalendarClock, Lock, Search } from "lucide-react";
 import { EmptyState } from "@/components/ui/brand";
-import type { JudgingSessionStatus } from "@/lib/rubric-types";
+import type { JudgingSessionStatus } from "@/lib/judging/rubric-types";
 import { LocalTime, SessionStatusPill } from "./shared";
 
 type Session = {

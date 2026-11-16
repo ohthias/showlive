@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { getMissions } from "@/lib/missions";
-import { computeMissionBreakdown, sanitizeResponses, scoreRound } from "@/lib/scoring";
+import { getMissions } from "@/lib/competition/missions";
+import { computeMissionBreakdown, sanitizeResponses, scoreRound } from "@/lib/competition/scoring";
 
 describe("motor de pontuação (igual ao RoboStage)", () => {
   const bioglow = getMissions("bioglow");

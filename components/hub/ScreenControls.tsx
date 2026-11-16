@@ -7,7 +7,7 @@ import { clearMessage, postMessage, updateCamera } from "@/app/actions/settings"
 import { Panel, Tag } from "@/components/ui/brand";
 import { useToast } from "@/components/ui/Toast";
 import { useServerClock } from "@/hooks/useLiveEvent";
-import { MESSAGE_DURATIONS, MESSAGE_MAX, messageVisible, TONES, type CameraSettings, type ScreenMessage, type ScreenMessageTone } from "@/lib/screen";
+import { MESSAGE_DURATIONS, MESSAGE_MAX, messageVisible, TONES, type CameraSettings, type ScreenMessage, type ScreenMessageTone } from "@/lib/live/screen";
 
 const TONE_ICON = { info: Megaphone, alert: TriangleAlert, celebrate: PartyPopper } as const;
 const TONE_CLS: Record<ScreenMessageTone, string> = {

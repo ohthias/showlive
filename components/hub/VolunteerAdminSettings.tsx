@@ -5,7 +5,7 @@ import { Megaphone, PauseCircle, PlayCircle, ShieldCheck, UsersRound } from "luc
 import { updateSettings } from "@/app/actions/settings";
 import { cornerBtn, Panel } from "@/components/ui/brand";
 import { useToast } from "@/components/ui/Toast";
-import type { LiveSettings } from "@/lib/live-types";
+import type { LiveSettings } from "@/lib/live/live-types";
 import { SettingToggle } from "./SettingToggle";
 
 const WINDOWS = [0, 2, 5, 10, 15, 30];

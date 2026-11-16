@@ -1,7 +1,7 @@
 import type { ActivityPayload, EventTheme } from "@/db/schema";
-import type { ScoreFormat } from "./format";
+import type { ScoreFormat } from "../competition/format";
 import type { CameraSettings, ScreenMessage } from "./screen";
-import type { AllianceConfig, AllianceResult, AllianceSlot, TeamMatchFlag } from "./alliance-types";
+import type { AllianceConfig, AllianceResult, AllianceSlot, TeamMatchFlag } from "../competition/alliance-types";
 
 /** Tudo o que uma tela ao vivo precisa. Serializável (vai pelo SSE). */
 export interface LiveSnapshot {

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { ArrowLeft } from "lucide-react";
 import { PreferencesForm } from "@/components/hub/PreferencesForm";
-import { loadPrefs } from "@/lib/hub-data";
+import { loadPrefs } from "@/lib/live/hub-data";
 
 export const dynamic = "force-dynamic";
 

@@ -7,8 +7,8 @@ import { deleteExtraChallenge, saveArenas } from "@/app/actions/challenges";
 import { cornerBtn, EmptyState, Panel } from "@/components/ui/brand";
 import { useConfirm } from "@/components/ui/Confirm";
 import { useToast } from "@/components/ui/Toast";
-import { CHALLENGE_TYPES } from "@/lib/challenge";
-import { arenaMaxScore, HAZARDS, type ObrArena, type ObrLeague } from "@/lib/obr";
+import { CHALLENGE_TYPES } from "@/lib/competition/challenge";
+import { arenaMaxScore, HAZARDS, type ObrArena, type ObrLeague } from "@/lib/obr/obr";
 
 /**
  * Os 3 modelos de arena da competição. Cada rodada usa uma arena; a mesa só

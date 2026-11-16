@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { JudgingSessionStatus } from "@/lib/rubric-types";
+import type { JudgingSessionStatus } from "@/lib/judging/rubric-types";
 
 export const SESSION_STATUS: Record<JudgingSessionStatus, { label: string; cls: string }> = {
   scheduled: { label: "Agendada", cls: "border-base-content/20 text-base-content/60" },

@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { LogOut, NotebookPen } from "lucide-react";
 import { leaveBanca } from "@/app/actions/judging";
 import { Logo, Tag } from "@/components/ui/brand";
-import { getCodeJudge } from "@/lib/judging";
+import { getCodeJudge } from "@/lib/judging/judging";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Sala de avaliação", robots: { index: false } };

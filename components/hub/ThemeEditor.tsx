@@ -7,7 +7,7 @@ import { updateSettings, updateTheme } from "@/app/actions/settings";
 import { cornerBtn, Panel } from "@/components/ui/brand";
 import { useToast } from "@/components/ui/Toast";
 import type { EventTheme } from "@/db/schema";
-import type { LiveSettings } from "@/lib/live-types";
+import type { LiveSettings } from "@/lib/live/live-types";
 import {
   BG_STYLES,
   CORNERS,
@@ -22,7 +22,7 @@ import {
   resolveTvStyle,
   THEME_PRESETS,
   type TvStyle,
-} from "@/lib/themes";
+} from "@/lib/live/themes";
 import { SettingToggle } from "./SettingToggle";
 
 export function ThemeEditor({

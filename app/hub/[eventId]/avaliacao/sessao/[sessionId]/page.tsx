@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { EvaluationForm } from "@/components/judging/EvaluationForm";
-import { loadHubEvent } from "@/lib/hub-data";
-import { getJudge, judgeCanEdit, judgingSettings, loadSessionForJudging } from "@/lib/judging";
-import { toFormProps } from "@/lib/judging-view";
+import { loadHubEvent } from "@/lib/live/hub-data";
+import { getJudge, judgeCanEdit, judgingSettings, loadSessionForJudging } from "@/lib/judging/judging";
+import { toFormProps } from "@/lib/judging/judging-view";
 
 export const dynamic = "force-dynamic";
 

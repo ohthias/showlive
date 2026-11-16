@@ -5,8 +5,8 @@ import {
   computeRanking,
   currentRound,
   isQualifyingComplete,
-} from "@/lib/ranking";
-import type { LiveRound, LiveScore, LiveTeam } from "@/lib/live-types";
+} from "@/lib/competition/ranking";
+import type { LiveRound, LiveScore, LiveTeam } from "@/lib/live/live-types";
 
 const T = (id: string): LiveTeam => ({ id, name: `Equipe ${id}`, number: null, organization: null });
 const R = (id: string, position: number, kind: LiveRound["kind"] = "qualifying"): LiveRound => ({

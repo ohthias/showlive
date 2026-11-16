@@ -33,16 +33,16 @@ import { cornerBtn, Logo, Tag } from "@/components/ui/brand";
 import { useConfirm } from "@/components/ui/Confirm";
 import { useToast } from "@/components/ui/Toast";
 import { useLiveEvent, useServerClock } from "@/hooks/useLiveEvent";
-import type { LiveSnapshot } from "@/lib/live-types";
-import type { Mission } from "@/lib/missions";
-import { availableRoundsForTeam, computePlayoffs, currentRound, scoreIndex } from "@/lib/ranking";
-import { scoreRound, type RoundResponses } from "@/lib/scoring";
-import { scoreChallenge, type Challenge, type CustomResponses } from "@/lib/challenge";
-import { formatScore, formatSeconds, formatValue } from "@/lib/format";
+import type { LiveSnapshot } from "@/lib/live/live-types";
+import type { Mission } from "@/lib/competition/missions";
+import { availableRoundsForTeam, computePlayoffs, currentRound, scoreIndex } from "@/lib/competition/ranking";
+import { scoreRound, type RoundResponses } from "@/lib/competition/scoring";
+import { scoreChallenge, type Challenge, type CustomResponses } from "@/lib/competition/challenge";
+import { formatScore, formatSeconds, formatValue } from "@/lib/competition/format";
 import { CustomScoreForm } from "@/components/challenge/CustomScoreForm";
 import { useWakeLock } from "@/hooks/useWakeLock";
 import { ObrScoreForm } from "@/components/obr/ObrScoreForm";
-import { emptyResponses as emptyObr, scoreObr, type ObrArena, type ObrLeague, type ObrResponses } from "@/lib/obr";
+import { emptyResponses as emptyObr, scoreObr, type ObrArena, type ObrLeague, type ObrResponses } from "@/lib/obr/obr";
 import { MissionForm } from "./MissionForm";
 
 export type MesaForm =

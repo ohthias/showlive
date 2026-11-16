@@ -10,12 +10,12 @@ import { TimerControls } from "@/components/live/TimerControls";
 import { cornerBtn, EmptyState, Panel } from "@/components/ui/brand";
 import { useToast } from "@/components/ui/Toast";
 import { useLiveEvent } from "@/hooks/useLiveEvent";
-import type { LiveActivity, LiveSnapshot } from "@/lib/live-types";
-import { computePlayoffs, computeRanking, currentRound, roundProgress } from "@/lib/ranking";
-import { computeAllianceRanking } from "@/lib/alliance";
+import type { LiveActivity, LiveSnapshot } from "@/lib/live/live-types";
+import { computePlayoffs, computeRanking, currentRound, roundProgress } from "@/lib/competition/ranking";
+import { computeAllianceRanking } from "@/lib/competition/alliance";
 import { CopyChip } from "./CopyChip";
 import { ApprovalQueue } from "./ApprovalQueue";
-import { formatScore, formatValue, type ScoreFormat } from "@/lib/format";
+import { formatScore, formatValue, type ScoreFormat } from "@/lib/competition/format";
 
 interface Props {
   initial: LiveSnapshot;

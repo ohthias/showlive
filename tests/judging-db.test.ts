@@ -4,8 +4,8 @@ import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema";
-import { sanitizeRubric } from "@/lib/rubric";
-import { RUBRIC_PRESET_GROUPS } from "@/lib/rubric-presets";
+import { sanitizeRubric } from "@/lib/judging/rubric";
+import { RUBRIC_PRESET_GROUPS } from "@/lib/judging/rubric-presets";
 
 /** Tabelas da avaliação por rubricas: restrições, cascatas e isolamento do telão. */
 describe("avaliação por rubricas no banco", () => {

@@ -1,4 +1,4 @@
-import type { LiveRound, LiveScore, LiveSettings, LiveTeam } from "./live-types";
+import type { LiveRound, LiveScore, LiveSettings, LiveTeam } from "../live/live-types";
 
 /**
  * Classificação — funções puras, rodam igual no servidor e nas telas.

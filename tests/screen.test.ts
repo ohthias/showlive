@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cameraEmbed, cleanMessage, DEFAULT_CAMERA, messageVisible, sanitizeCamera } from "@/lib/screen";
+import { cameraEmbed, cleanMessage, DEFAULT_CAMERA, messageVisible, sanitizeCamera } from "@/lib/live/screen";
 
 describe("aviso do telão", () => {
   it("limpa o texto e respeita a validade", () => {

@@ -6,11 +6,12 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { accessCodes, eventMembers, events, judgingRooms, rounds } from "@/db/schema";
-import { requireEventRole } from "@/lib/access";
-import { cleanText, run, UserError } from "@/lib/action";
-import { normalizeCode } from "@/lib/codes";
-import { clearRefereeSession, writeRefereeSession } from "@/lib/referee";
-import { uniqueCode } from "@/lib/unique-code";
+import { requireEventRole } from "@/lib/auth/access";
+import { cleanText, run, UserError } from "@/lib/auth/action";
+import { normalizeCode } from "@/lib/codes/codes";
+import { clearRefereeSession, writeRefereeSession } from "@/lib/auth/referee";
+import { codeAttemptBlocked, recordCodeFailure } from "@/lib/codes/code-attempts";
+import { assignLiveCode, releaseLiveCode, resolveCode } from "@/lib/codes/unique-code";
 
 /* ------------------------------------------------------ códigos de mesa */
 
@@ -22,7 +23,8 @@ export async function addRefereeCode(eventId: string, rawLabel: string) {
     if (existing.length >= 20) throw new UserError("Limite de 20 mesas.");
     const label = cleanText(rawLabel, 30) || `Mesa ${existing.length + 1}`;
     // Fora do ar a mesa é criada sem código; ele nasce na ativação.
-    await db.insert(accessCodes).values({ eventId, code: event.status === "live" ? await uniqueCode() : null, label });
+    const [row] = await db.insert(accessCodes).values({ eventId, code: null, label }).returning({ id: accessCodes.id });
+    if (event.status === "live") await assignLiveCode(eventId, "mesa", row.id);
     revalidatePath(`/hub/${eventId}`, "layout");
     return null;
   });
@@ -66,7 +68,8 @@ export async function rotateRefereeCode(eventId: string, codeId: string) {
       .where(and(eq(accessCodes.id, codeId), eq(accessCodes.eventId, eventId)))
       .limit(1);
     if (!old) throw new UserError("Código não encontrado.");
-    await db.update(accessCodes).set({ code: await uniqueCode(), active: true, lastUsedAt: null }).where(eq(accessCodes.id, codeId));
+    await assignLiveCode(eventId, "mesa", codeId);
+    await db.update(accessCodes).set({ active: true }).where(eq(accessCodes.id, codeId));
     revalidatePath(`/hub/${eventId}`, "layout");
     return null;
   });
@@ -77,6 +80,7 @@ export async function deleteRefereeCode(eventId: string, codeId: string) {
     await requireEventRole(eventId, "admin");
     const db = await getDb();
     await db.delete(accessCodes).where(and(eq(accessCodes.id, codeId), eq(accessCodes.eventId, eventId)));
+    await releaseLiveCode("mesa", codeId);
     revalidatePath(`/hub/${eventId}`, "layout");
     return null;
   });
@@ -166,54 +170,78 @@ export async function removeMember(eventId: string, memberId: string) {
 
 export type CodeLookup =
   | { kind: "public"; eventCode: string; eventName: string }
-  | { kind: "referee"; eventName: string; label: string }
-  | { kind: "judge"; eventName: string; label: string };
+  | { kind: "referee"; eventName: string; label: string; ref: string }
+  | { kind: "judge"; eventName: string; label: string; ref: string };
 
+const INVALID = "Código inválido ou expirado. Os códigos mudam a cada vez que o evento fica ao vivo — confira com a organização.";
+
+/**
+ * Descobre para onde o código leva. O registro global (live_codes) garante
+ * que cada código aponta para UM lugar só, de UM evento só. Mesa e sala
+ * devolvem `ref` (o id dela): o passo seguinte (joinMesa/joinBanca) só aceita
+ * se o código ainda levar exatamente para lá.
+ */
 export async function lookupCode(raw: string) {
   return run<CodeLookup>(async () => {
+    const blocked = await codeAttemptBlocked();
+    if (blocked) throw new UserError(blocked);
     const code = normalizeCode(raw);
     if (code.length < 6) throw new UserError("O código tem 6 caracteres.");
     const db = await getDb();
 
+    const target = await resolveCode(code);
+    if (!target) {
+      await recordCodeFailure();
+      throw new UserError(INVALID);
+    }
+
     // Códigos só existem (e só valem) com o evento ao vivo.
     const [event] = await db
-      .select({ code: events.code, name: events.name, status: events.status })
+      .select({ id: events.id, code: events.code, name: events.name, status: events.status })
       .from(events)
-      .where(eq(events.code, code))
+      .where(eq(events.id, target.eventId))
       .limit(1);
-    if (event?.code && event.status === "live") return { kind: "public", eventCode: event.code, eventName: event.name };
+    if (!event) throw new UserError(INVALID);
+    if (event.status !== "live") throw new UserError("Este evento não está ao vivo no momento.");
 
-    const [mesa] = await db
-      .select({ label: accessCodes.label, active: accessCodes.active, eventName: events.name, status: events.status })
-      .from(accessCodes)
-      .innerJoin(events, eq(events.id, accessCodes.eventId))
-      .where(eq(accessCodes.code, code))
-      .limit(1);
-    if (mesa) {
-      if (mesa.status !== "live") throw new UserError("Este evento não está ao vivo no momento.");
+    if (target.kind === "public") return { kind: "public", eventCode: code, eventName: event.name };
+
+    if (target.kind === "mesa") {
+      const [mesa] = await db
+        .select({ id: accessCodes.id, label: accessCodes.label, active: accessCodes.active })
+        .from(accessCodes)
+        .where(and(eq(accessCodes.id, target.refId), eq(accessCodes.eventId, event.id), eq(accessCodes.code, code)))
+        .limit(1);
+      if (!mesa) throw new UserError(INVALID);
       if (!mesa.active) throw new UserError("Este código de mesa foi desativado pela organização.");
-      return { kind: "referee", eventName: mesa.eventName, label: mesa.label };
+      return { kind: "referee", eventName: event.name, label: mesa.label, ref: mesa.id };
     }
 
     const [room] = await db
-      .select({ label: judgingRooms.name, active: judgingRooms.active, eventName: events.name, status: events.status })
+      .select({ id: judgingRooms.id, label: judgingRooms.name, active: judgingRooms.active })
       .from(judgingRooms)
-      .innerJoin(events, eq(events.id, judgingRooms.eventId))
-      .where(eq(judgingRooms.code, code))
+      .where(and(eq(judgingRooms.id, target.refId), eq(judgingRooms.eventId, event.id), eq(judgingRooms.code, code)))
       .limit(1);
-    if (room) {
-      if (room.status !== "live") throw new UserError("Este evento não está ao vivo no momento.");
-      if (!room.active) throw new UserError("Este código de sala foi desativado pela organização.");
-      return { kind: "judge", eventName: room.eventName, label: room.label };
-    }
-    throw new UserError("Código inválido ou expirado. Os códigos mudam a cada vez que o evento fica ao vivo — confira com a organização.");
+    if (!room) throw new UserError(INVALID);
+    if (!room.active) throw new UserError("Este código de sala foi desativado pela organização.");
+    return { kind: "judge", eventName: event.name, label: room.label, ref: room.id };
   });
 }
 
-export async function joinMesa(raw: string, rawName: string) {
+/** `expectedRef`: o id da mesa mostrada no passo anterior (o código não pode ter mudado de dono). */
+export async function joinMesa(raw: string, rawName: string, expectedRef?: string) {
+  const blocked = await codeAttemptBlocked();
+  if (blocked) return { ok: false as const, error: blocked };
   const code = normalizeCode(raw);
   const name = cleanText(rawName, 30);
   const db = await getDb();
+  const target = await resolveCode(code);
+  if (!target || target.kind !== "mesa") {
+    await recordCodeFailure();
+    return { ok: false as const, error: "Código inválido, desativado ou evento fora do ar." };
+  }
+  if (expectedRef && expectedRef !== target.refId)
+    return { ok: false as const, error: "Este código mudou desde que você o digitou. Volte e digite de novo." };
   const [mesa] = await db
     .select({
       id: accessCodes.id,
@@ -225,7 +253,7 @@ export async function joinMesa(raw: string, rawName: string) {
     })
     .from(accessCodes)
     .innerJoin(events, eq(events.id, accessCodes.eventId))
-    .where(eq(accessCodes.code, code))
+    .where(and(eq(accessCodes.id, target.refId), eq(accessCodes.eventId, target.eventId), eq(accessCodes.code, code)))
     .limit(1);
   if (!mesa?.active || !mesa.code || mesa.status !== "live" || !mesa.eventCode)
     return { ok: false as const, error: "Código inválido, desativado ou evento fora do ar." };

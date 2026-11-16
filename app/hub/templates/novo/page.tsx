@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { ChallengeBuilder } from "@/components/challenge/ChallengeBuilder";
-import { blankChallenge, CHALLENGE_PRESETS, CHALLENGE_TYPES, type ChallengeType } from "@/lib/challenge";
-import { findAlliancePreset } from "@/lib/alliance-presets";
+import { blankChallenge, CHALLENGE_PRESETS, CHALLENGE_TYPES, type ChallengeType } from "@/lib/competition/challenge";
+import { findAlliancePreset } from "@/lib/competition/alliance-presets";
 
 export default async function NewTemplatePage({ searchParams }: { searchParams: Promise<{ modelo?: string; tipo?: string; alianca?: string }> }) {
   const { modelo, tipo, alianca } = await searchParams;

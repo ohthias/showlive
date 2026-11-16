@@ -6,7 +6,7 @@ import Link from "next/link";
 import { ChevronDown, ChevronUp, Expand, Lock, LogOut, Minimize, Search, Trophy, WifiOff } from "lucide-react";
 import { useLiveEvent } from "@/hooks/useLiveEvent";
 import type { EventTheme } from "@/db/schema";
-import type { LiveActivity, LiveSnapshot } from "@/lib/live-types";
+import type { LiveActivity, LiveSnapshot } from "@/lib/live/live-types";
 import {
   computeExtraRanking,
   computePlayoffs,
@@ -15,8 +15,8 @@ import {
   qualifyingRounds,
   roundProgress,
   type RankingRow,
-} from "@/lib/ranking";
-import { FONTS, fontCss, isVideo, numFontCss, resolveTvStyle, sanitizeTheme, type TvStyle } from "@/lib/themes";
+} from "@/lib/competition/ranking";
+import { FONTS, fontCss, isVideo, numFontCss, resolveTvStyle, sanitizeTheme, type TvStyle } from "@/lib/live/themes";
 import { Bracket } from "./Bracket";
 import { AllianceBoard } from "./AllianceBoard";
 import { CameraFeed, CameraMenu, useLocalCamera } from "./CameraFeed";
@@ -24,7 +24,7 @@ import { ScreenBanner } from "./ScreenBanner";
 import { TimerDisplay } from "./TimerDisplay";
 import { QrBadge } from "./QrBadge";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import { bestLabel, formatClockTime, formatScore, formatValue, type ScoreFormat } from "@/lib/format";
+import { bestLabel, formatClockTime, formatScore, formatValue, type ScoreFormat } from "@/lib/competition/format";
 
 const SLIDE_MS = 12_000;
 const CELEBRATE_MS = 5_000;

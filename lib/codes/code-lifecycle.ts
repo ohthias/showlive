@@ -1,18 +1,22 @@
 import "server-only";
 import { asc, eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
-import { accessCodes, events, judgingRooms, userPreferences } from "@/db/schema";
-import { mergePrefs } from "./prefs";
-import { uniqueCode } from "./unique-code";
+import { accessCodes, judgingRooms, userPreferences } from "@/db/schema";
+import { mergePrefs } from "../auth/prefs";
+import { assignLiveCode, releaseAllLiveCodes } from "./unique-code";
 
 /**
  * Regra dos códigos de acesso:
  *  - só existem enquanto o evento está AO VIVO;
  *  - são gerados no momento da ativação (sempre novos — um código de uma
  *    sessão anterior nunca volta a funcionar);
- *  - são apagados quando o evento volta para preparação ou é encerrado.
+ *  - são apagados quando o evento volta para preparação ou é encerrado;
+ *  - são únicos entre TODOS os eventos (registro live_codes), então com
+ *    vários eventos ao vivo ao mesmo tempo um código nunca leva ao evento
+ *    errado.
  * As "mesas" (rótulo, ativa/inativa) continuam existindo fora do ar; só o
- * código delas some. A mesma regra vale para as salas de avaliação.
+ * código delas some. A mesma regra vale para as salas de avaliação: cada
+ * sala tem o seu código.
  */
 export async function generateLiveCodes(eventId: string, ownerId: string) {
   const db = await getDb();
@@ -31,20 +35,15 @@ export async function generateLiveCodes(eventId: string, ownerId: string) {
       .returning({ id: accessCodes.id });
   }
 
-  await db.update(events).set({ code: await uniqueCode() }).where(eq(events.id, eventId));
-  for (const s of slots) {
-    await db.update(accessCodes).set({ code: await uniqueCode(), lastUsedAt: null }).where(eq(accessCodes.id, s.id));
-  }
+  // Começa limpo: nenhum código de uma ativação anterior sobrevive.
+  await releaseAllLiveCodes(eventId);
+  await assignLiveCode(eventId, "public", eventId);
+  for (const s of slots) await assignLiveCode(eventId, "mesa", s.id);
   // Salas de avaliação não são criadas automaticamente: só ganham código as que existem.
   const rooms = await db.select({ id: judgingRooms.id }).from(judgingRooms).where(eq(judgingRooms.eventId, eventId));
-  for (const r of rooms) {
-    await db.update(judgingRooms).set({ code: await uniqueCode(), lastUsedAt: null }).where(eq(judgingRooms.id, r.id));
-  }
+  for (const r of rooms) await assignLiveCode(eventId, "room", r.id);
 }
 
 export async function clearLiveCodes(eventId: string) {
-  const db = await getDb();
-  await db.update(events).set({ code: null }).where(eq(events.id, eventId));
-  await db.update(accessCodes).set({ code: null }).where(eq(accessCodes.eventId, eventId));
-  await db.update(judgingRooms).set({ code: null }).where(eq(judgingRooms.eventId, eventId));
+  await releaseAllLiveCodes(eventId);
 }

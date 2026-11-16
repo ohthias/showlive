@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { scores } from "@/db/schema";
 import { ArenaEditor } from "@/components/obr/ArenaEditor";
-import { loadHubEvent } from "@/lib/hub-data";
-import { defaultLeague } from "@/lib/obr";
+import { loadHubEvent } from "@/lib/live/hub-data";
+import { defaultLeague } from "@/lib/obr/obr";
 
 export const dynamic = "force-dynamic";
 

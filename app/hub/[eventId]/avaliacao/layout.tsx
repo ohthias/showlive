@@ -1,6 +1,6 @@
 import { JudgingTabs } from "@/components/judging/JudgingTabs";
-import { hasRole } from "@/lib/access";
-import { loadHubEvent } from "@/lib/hub-data";
+import { hasRole } from "@/lib/auth/access";
+import { loadHubEvent } from "@/lib/live/hub-data";
 
 export default async function JudgingLayout({ children, params }: { children: React.ReactNode; params: Promise<{ eventId: string }> }) {
   const { eventId } = await params;

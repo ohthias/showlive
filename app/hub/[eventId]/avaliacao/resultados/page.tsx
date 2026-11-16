@@ -2,12 +2,12 @@ import { asc, eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { rubricEvaluations, teams } from "@/db/schema";
 import { JudgingResults } from "@/components/judging/JudgingResults";
-import { loadHubEvent } from "@/lib/hub-data";
-import { judgingSettings, loadRooms, loadRubrics, loadSessions } from "@/lib/judging";
-import { computeRanking } from "@/lib/ranking";
-import { computeAllianceRanking } from "@/lib/alliance";
-import { rankOverall, rankRubric, roomRubrics } from "@/lib/rubric";
-import { buildSnapshot } from "@/lib/snapshot";
+import { loadHubEvent } from "@/lib/live/hub-data";
+import { judgingSettings, loadRooms, loadRubrics, loadSessions } from "@/lib/judging/judging";
+import { computeRanking } from "@/lib/competition/ranking";
+import { computeAllianceRanking } from "@/lib/competition/alliance";
+import { rankOverall, rankRubric, roomRubrics } from "@/lib/judging/rubric";
+import { buildSnapshot } from "@/lib/live/snapshot";
 
 export const dynamic = "force-dynamic";
 

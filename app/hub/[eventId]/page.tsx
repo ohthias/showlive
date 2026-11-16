@@ -1,7 +1,7 @@
 import { Overview } from "@/components/hub/Overview";
-import { hasRole } from "@/lib/access";
-import { loadHubEvent, refereeCodes } from "@/lib/hub-data";
-import { buildSnapshot } from "@/lib/snapshot";
+import { hasRole } from "@/lib/auth/access";
+import { loadHubEvent, refereeCodes } from "@/lib/live/hub-data";
+import { buildSnapshot } from "@/lib/live/snapshot";
 
 export const dynamic = "force-dynamic";
 

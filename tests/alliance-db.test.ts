@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { eq } from "drizzle-orm";
 import * as schema from "@/db/schema";
-import { findAlliancePreset } from "@/lib/alliance-presets";
+import { findAlliancePreset } from "@/lib/competition/alliance-presets";
 
 /** Partidas de alianças: número único por evento, revisão do telão e cascata. */
 describe("partidas no banco", () => {

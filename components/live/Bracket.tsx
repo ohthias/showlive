@@ -1,6 +1,6 @@
 import { Crown, Lock } from "lucide-react";
-import type { PlayoffSlot, PlayoffState } from "@/lib/ranking";
-import { FLL_FORMAT, formatValue, type ScoreFormat } from "@/lib/format";
+import type { PlayoffSlot, PlayoffState } from "@/lib/competition/ranking";
+import { FLL_FORMAT, formatValue, type ScoreFormat } from "@/lib/competition/format";
 
 /**
  * Chave de playoffs. Usa variáveis CSS do telão (--tv-*) quando existem e

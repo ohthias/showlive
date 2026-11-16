@@ -18,9 +18,9 @@ import { cornerBtn, EmptyState, Panel, Tag } from "@/components/ui/brand";
 import { useConfirm } from "@/components/ui/Confirm";
 import { useToast } from "@/components/ui/Toast";
 import { useLiveEvent } from "@/hooks/useLiveEvent";
-import { computeAllianceRanking, RANK_BY_LABELS, scoreMatch, tiebreakerLabel, type TeamMatchFlag } from "@/lib/alliance";
-import type { Challenge, CustomResponses } from "@/lib/challenge";
-import type { LiveMatch, LiveSnapshot, LiveTeam } from "@/lib/live-types";
+import { computeAllianceRanking, RANK_BY_LABELS, scoreMatch, tiebreakerLabel, type TeamMatchFlag } from "@/lib/competition/alliance";
+import type { Challenge, CustomResponses } from "@/lib/competition/challenge";
+import type { LiveMatch, LiveSnapshot, LiveTeam } from "@/lib/live/live-types";
 
 const timeFmt = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" });
 const pad = (n: number) => String(n).padStart(2, "0");

@@ -5,9 +5,9 @@ import { ClipboardCheck, LayoutDashboard, Radio, RotateCcw, Save } from "lucide-
 import { savePreferences } from "@/app/actions/challenges";
 import { cornerBtn, Panel } from "@/components/ui/brand";
 import { useToast } from "@/components/ui/Toast";
-import { SEASONS } from "@/lib/missions";
-import { DEFAULT_PREFS, type UserPrefs } from "@/lib/prefs";
-import { THEME_PRESETS } from "@/lib/themes";
+import { SEASONS } from "@/lib/competition/missions";
+import { DEFAULT_PREFS, type UserPrefs } from "@/lib/auth/prefs";
+import { THEME_PRESETS } from "@/lib/live/themes";
 
 export function PreferencesForm({ initial }: { initial: UserPrefs }) {
   const [p, setP] = useState(initial);

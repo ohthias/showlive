@@ -2,7 +2,7 @@
 
 import { Megaphone, PartyPopper, TriangleAlert } from "lucide-react";
 import { useServerClock } from "@/hooks/useLiveEvent";
-import { messageVisible, type ScreenMessage } from "@/lib/screen";
+import { messageVisible, type ScreenMessage } from "@/lib/live/screen";
 
 const ALERT = "#e5484d";
 

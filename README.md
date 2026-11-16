@@ -33,7 +33,7 @@ mesma conta do RoboStage.
 | **FLL Challenge** | Missões oficiais da temporada (`data/missions.json`), maior nota com desempate pela 2ª e 3ª. |
 | **Imagem da missão (FLL)** | Em Configurações → "Mesa: árbitro vê a imagem da missão" (FLL Challenge e Future Edition, ligada por padrão). Vale na hora para as mesas abertas. As imagens ficam em `public/images/missions/` (WebP, ~1,2 MB no total). |
 | **FLL Future Edition** | Missões da BioGlow Future Edition (`data/future-edition.json`), penalidade por cartões (1: −10, 2: −30, 3: zera). Partida de 2:30. |
-| **OBR Resgate** | O admin monta as **3 arenas** (`/hub/:id/arenas`): perigos que existem no trajeto, ladrilhos de cada seção entre checkpoints, ladrilho de saída e Desafio Surpresa (×1,5). Rodada 1 → 1ª arena, e assim por diante. Pontuação igual ao Pontuador OBR do RoboStage (`lib/obr.ts`); a mesa só marca o que existe na arena. Classificação pela **soma das 2 maiores notas**, desempate pela **menor soma dos tempos** (manual oficial 2025). Rodada de 5 min. |
+| **OBR Resgate** | O admin monta as **3 arenas** (`/hub/:id/arenas`): perigos que existem no trajeto, ladrilhos de cada seção entre checkpoints, ladrilho de saída e Desafio Surpresa (×1,5). Rodada 1 → 1ª arena, e assim por diante. Pontuação igual ao Pontuador OBR do RoboStage (`lib/obr/obr.ts`); a mesa só marca o que existe na arena. Classificação pela **soma das 2 maiores notas**, desempate pela **menor soma dos tempos** (manual oficial 2025). Rodada de 5 min. |
 | **Desafios extras (OBR)** | Opcionais. Criados no construtor de desafios; cada um vira uma rodada "extra" com **ranking próprio** no telão, fora da classificação geral. |
 | **Personalizado** | Construtor de desafios (abaixo). |
 
@@ -55,7 +55,8 @@ Além das regras oficiais da FLL, o organizador pode criar o próprio desafio
 O construtor gera o **regulamento** (aba para imprimir ou mandar às equipes) e
 tem uma aba **Testar súmula**, que mostra exatamente o que a mesa verá. Há 4
 modelos prontos (Seguidor de Linha, Resgate na Arena, Apresentação do
-Projeto, Lançamento de Precisão). O cálculo fica em `lib/challenge.ts` e é
+Projeto, Lançamento de Precisão). O cálculo fica em
+`lib/competition/challenge.ts` e é
 refeito no servidor; o ranking entende "menor vence" (tempo), inclusive no
 desempate e nos playoffs.
 
@@ -107,7 +108,7 @@ botões grandes, vibrar ao enviar, manter tela ligada.
 Em **Telão → Estilo do telão**, com prévia ao vivo do rascunho (a prévia muda
 a cada clique; o telão só muda em **Aplicar**). Tudo fica em `events.theme`
 (jsonb), então não há migração: temas antigos recebem os padrões de
-`resolveTvStyle` (`lib/themes.ts`).
+`resolveTvStyle` (`lib/live/themes.ts`).
 
 - **Temas prontos:** RoboStage, RoboStage Azul, Arena Neon, Placar Esportivo,
   Claro, Unearthed, Submerged, Masterpiece, OBR Resgate, Cidade (vídeo).
@@ -204,6 +205,9 @@ migrações + gatilhos de revisão num Postgres embutido).
    A `0004` adiciona a opção de mostrar a imagem da missão ao árbitro.
    A `0005` adiciona as configurações de voluntários/administradores
    (aprovação de notas, pausa, janela de correção, rodadas por mesa, QR no telão).
+   As migrações `0006` a `0008` adicionam julgamento, alianças e configurações
+   do telão. A `0009` centraliza os códigos ativos de eventos, mesas e salas
+   para garantir unicidade global durante eventos simultâneos.
 
 2. **Vercel** — projeto novo apontando para este diretório, domínio
    `showlive.robostage.com.br`, região de função `gru1`. Fluid Compute ligado
@@ -244,13 +248,18 @@ app/
 db/schema.ts                   schema Drizzle (banco do ShowLive)
 drizzle/                       migrações (+ gatilhos de realtime)
 lib/
-  scoring.ts                   motor de pontuação (portado do RoboStage)
-  ranking.ts                   classificação, rodada atual, playoffs (puro)
-  snapshot.ts                  estado do evento por público (public/staff)
-  live-hub.ts                  poller coalescido + cache de snapshot
-  access.ts, referee.ts        papéis, convites, cookie assinado da mesa
+  auth/                        autenticação, papéis, convites e preferências
+  codes/                       geração, resolução e ciclo de vida dos códigos
+  competition/                desafios, alianças, partidas, pontuação e ranking
+  judging/                    julgamento, rubricas e presets de avaliação
+  live/                        snapshots, SSE, telão, temas e cronômetro
+  obr/                         regras, tipos e pontuação da OBR
 data/missions.json             cópia de public/data/missions.json do RoboStage
 ```
+
+Os módulos de `lib/` são organizados por domínio para manter responsabilidades
+relacionadas próximas e tornar os imports explícitos. As telas e Server Actions
+consomem esses módulos pelos caminhos `@/lib/<domínio>/<módulo>`.
 
 Ao atualizar as missões no RoboStage, copie `public/data/missions.json` (e
 `public/data/fll/future-edition.json`) para `data/` aqui, e as imagens de

@@ -1,5 +1,5 @@
 import type { HazardKey, ObrArena, ObrLeague, ObrResponses } from "./obr-types";
-import { newId, sanitizeChallenge } from "./challenge";
+import { newId, sanitizeChallenge } from "../competition/challenge";
 
 export type * from "./obr-types";
 

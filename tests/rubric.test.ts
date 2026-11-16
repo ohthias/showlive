@@ -11,8 +11,8 @@ import {
   scoreRubric,
   submitProblems,
   type ResultsEvaluation,
-} from "@/lib/rubric";
-import { findPresetGroup, RUBRIC_PRESET_GROUPS, suggestedPresetGroup } from "@/lib/rubric-presets";
+} from "@/lib/judging/rubric";
+import { findPresetGroup, RUBRIC_PRESET_GROUPS, suggestedPresetGroup } from "@/lib/judging/rubric-presets";
 
 const simple = sanitizeRubric({
   levels: [

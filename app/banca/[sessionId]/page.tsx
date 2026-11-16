@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { EvaluationForm } from "@/components/judging/EvaluationForm";
-import { getCodeJudge, judgeCanEdit, judgingSettings, loadSessionForJudging } from "@/lib/judging";
-import { toFormProps } from "@/lib/judging-view";
+import { getCodeJudge, judgeCanEdit, judgingSettings, loadSessionForJudging } from "@/lib/judging/judging";
+import { toFormProps } from "@/lib/judging/judging-view";
 
 export default async function BancaSessionPage({ params }: { params: Promise<{ sessionId: string }> }) {
   const { sessionId } = await params;

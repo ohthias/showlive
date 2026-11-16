@@ -3,7 +3,7 @@
 import { useOptimistic, useTransition } from "react";
 import { updateSettings } from "@/app/actions/settings";
 import { useToast } from "@/components/ui/Toast";
-import type { LiveSettings } from "@/lib/live-types";
+import type { LiveSettings } from "@/lib/live/live-types";
 
 type BoolKey = { [K in keyof LiveSettings]: LiveSettings[K] extends boolean ? K : never }[keyof LiveSettings];
 

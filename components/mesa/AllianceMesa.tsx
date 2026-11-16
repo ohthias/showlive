@@ -13,9 +13,9 @@ import { useConfirm } from "@/components/ui/Confirm";
 import { useToast } from "@/components/ui/Toast";
 import { useLiveEvent } from "@/hooks/useLiveEvent";
 import { useWakeLock } from "@/hooks/useWakeLock";
-import { computeAllianceRanking, scoreMatch, type TeamMatchFlag } from "@/lib/alliance";
-import type { Challenge, CustomResponses } from "@/lib/challenge";
-import type { LiveSnapshot, LiveTeam } from "@/lib/live-types";
+import { computeAllianceRanking, scoreMatch, type TeamMatchFlag } from "@/lib/competition/alliance";
+import type { Challenge, CustomResponses } from "@/lib/competition/challenge";
+import type { LiveSnapshot, LiveTeam } from "@/lib/live/live-types";
 import { MesaDeviceMenu, useMesaDevicePrefs } from "./MesaDevice";
 
 type Side = "red" | "blue";

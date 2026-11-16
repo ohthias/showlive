@@ -6,8 +6,8 @@ import { approveScores, rejectScore } from "@/app/actions/scores";
 import { cornerBtn, Panel } from "@/components/ui/brand";
 import { useConfirm } from "@/components/ui/Confirm";
 import { useToast } from "@/components/ui/Toast";
-import type { LiveSnapshot } from "@/lib/live-types";
-import { formatScore } from "@/lib/format";
+import type { LiveSnapshot } from "@/lib/live/live-types";
+import { formatScore } from "@/lib/competition/format";
 
 /** Notas das mesas aguardando aprovação (configuração "Aprovar notas antes do telão"). */
 export function ApprovalQueue({ snapshot: s, canEdit }: { snapshot: LiveSnapshot; canEdit: boolean }) {

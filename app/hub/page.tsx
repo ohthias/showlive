@@ -4,9 +4,9 @@ import { ArrowUpRight, CalendarClock, Radio, Trophy, Users } from "lucide-react"
 import { CreateEventButton } from "@/components/hub/CreateEventDialog";
 import { StatusPill } from "@/components/hub/StatusPill";
 import { AnimatedBackground, EmptyState } from "@/components/ui/brand";
-import { getIdentity } from "@/lib/access";
-import { listMyEvents, loadPrefs, loadTemplates } from "@/lib/hub-data";
-import { formatLabel } from "@/lib/event-format";
+import { getIdentity } from "@/lib/auth/access";
+import { listMyEvents, loadPrefs, loadTemplates } from "@/lib/live/hub-data";
+import { formatLabel } from "@/lib/competition/event-format";
 
 export const dynamic = "force-dynamic";
 

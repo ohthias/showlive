@@ -36,7 +36,10 @@ export function EnterCodeForm({ initialCode = "", compact = false }: { initialCo
     e.preventDefault();
     setError("");
     start(async () => {
-      const res = found?.kind === "judge" ? await joinBanca(code, name) : await joinMesa(code, name);
+      // Passa o id da sala/mesa confirmada: se o código mudou de dono no meio
+      // do caminho, o servidor recusa em vez de abrir outra sala.
+      const ref = found && found.kind !== "public" ? found.ref : undefined;
+      const res = found?.kind === "judge" ? await joinBanca(code, name, ref) : await joinMesa(code, name, ref);
       if (res && !res.ok) setError(res.error);
     });
   };

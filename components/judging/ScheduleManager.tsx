@@ -7,7 +7,7 @@ import { addSession, deleteSession, generateSchedule, updateSession } from "@/ap
 import { cornerBtn, EmptyState, Panel } from "@/components/ui/brand";
 import { useConfirm } from "@/components/ui/Confirm";
 import { useToast } from "@/components/ui/Toast";
-import type { JudgingSessionStatus } from "@/lib/rubric-types";
+import type { JudgingSessionStatus } from "@/lib/judging/rubric-types";
 import { fromLocalInput, LocalTime, SESSION_STATUS, SessionStatusPill, toLocalInput } from "./shared";
 
 type Rubric = { id: string; name: string };

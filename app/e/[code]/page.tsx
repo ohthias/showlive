@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Telao } from "@/components/live/Telao";
-import { normalizeCode } from "@/lib/codes";
-import { buildSnapshot, getEventByCode } from "@/lib/snapshot";
+import { normalizeCode } from "@/lib/codes/codes";
+import { buildSnapshot, getEventByCode } from "@/lib/live/snapshot";
 
 export const dynamic = "force-dynamic";
 

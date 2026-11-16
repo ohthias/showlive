@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import type { LiveSnapshot } from "@/lib/live-types";
+import type { LiveSnapshot } from "@/lib/live/live-types";
 
 export type LiveStatus = "live" | "connecting" | "offline";
 

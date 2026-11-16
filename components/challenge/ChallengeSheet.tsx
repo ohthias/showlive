@@ -1,5 +1,5 @@
-import { bestPossible, CHALLENGE_TYPES, ITEM_KINDS, type Challenge, type ChallengeItem } from "@/lib/challenge";
-import { formatSeconds, formatValue } from "@/lib/format";
+import { bestPossible, CHALLENGE_TYPES, ITEM_KINDS, type Challenge, type ChallengeItem } from "@/lib/competition/challenge";
+import { formatSeconds, formatValue } from "@/lib/competition/format";
 
 /** Regulamento do desafio, pronto para imprimir ou mandar para as equipes. */
 export function ChallengeSheet({ challenge: ch, eventName }: { challenge: Challenge; eventName?: string }) {

@@ -5,7 +5,7 @@ import { Monitor, Save, Video, VideoOff, Youtube } from "lucide-react";
 import { updateCamera } from "@/app/actions/settings";
 import { cornerBtn, Panel, Tag } from "@/components/ui/brand";
 import { useToast } from "@/components/ui/Toast";
-import { cameraEmbed, type CameraSettings } from "@/lib/screen";
+import { cameraEmbed, type CameraSettings } from "@/lib/live/screen";
 
 const LAYOUTS: { id: CameraSettings["layout"]; label: string; hint: string }[] = [
   { id: "pip", label: "Janela no canto", hint: "A classificação continua inteira; a câmera fica por cima, num canto." },

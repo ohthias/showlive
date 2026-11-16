@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { CHALLENGE_PRESETS, blankChallenge, sanitizeChallenge, sanitizeCustomResponses, scoreChallenge } from "@/lib/challenge";
-import { formatScore } from "@/lib/format";
+import { CHALLENGE_PRESETS, blankChallenge, sanitizeChallenge, sanitizeCustomResponses, scoreChallenge } from "@/lib/competition/challenge";
+import { formatScore } from "@/lib/competition/format";
 
 const preset = (id: string) => CHALLENGE_PRESETS.find((p) => p.id === id)!.challenge;
 

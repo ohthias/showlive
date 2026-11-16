@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { BancaHome } from "@/components/judging/BancaHome";
-import { getCodeJudge, judgingSettings, loadRubrics, loadSessions } from "@/lib/judging";
-import { roomRubrics } from "@/lib/rubric";
+import { getCodeJudge, judgingSettings, loadRubrics, loadSessions } from "@/lib/judging/judging";
+import { roomRubrics } from "@/lib/judging/rubric";
 
 export default async function BancaPage() {
   const ctx = await getCodeJudge();

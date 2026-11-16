@@ -1,10 +1,10 @@
 import { sql } from "drizzle-orm";
-import type { Challenge } from "@/lib/challenge-types";
-import type { UserPrefs } from "@/lib/prefs";
-import type { ObrLeague, RoundMeta } from "@/lib/obr-types";
-import type { AllianceSlot, MatchResult } from "@/lib/alliance-types";
-import type { CameraSettings, ScreenMessage } from "@/lib/screen";
-import type { EvaluationComments, EvaluationFeedback, EvaluationScores, RubricDefinition } from "@/lib/rubric-types";
+import type { Challenge } from "@/lib/competition/challenge-types";
+import type { UserPrefs } from "@/lib/auth/prefs";
+import type { ObrLeague, RoundMeta } from "@/lib/obr/obr-types";
+import type { AllianceSlot, MatchResult } from "@/lib/competition/alliance-types";
+import type { CameraSettings, ScreenMessage } from "@/lib/live/screen";
+import type { EvaluationComments, EvaluationFeedback, EvaluationScores, RubricDefinition } from "@/lib/judging/rubric-types";
 import {
   bigint,
   bigserial,
@@ -523,3 +523,29 @@ export type MatchRow = typeof matches.$inferSelect;
 export type JudgingRoomRow = typeof judgingRooms.$inferSelect;
 export type JudgingSessionRow = typeof judgingSessions.$inferSelect;
 export type RubricEvaluationRow = typeof rubricEvaluations.$inferSelect;
+
+/* ----------------------------------------------- registro de códigos */
+
+/**
+ * Registro global dos códigos ao vivo (público, mesa e sala de avaliação).
+ * A chave primária é o próprio código: é isto que garante que, com muitos
+ * eventos ativando ao mesmo tempo, um código nunca aponte para dois lugares.
+ * A reserva e a gravação do código na mesa/sala acontecem na MESMA instrução
+ * SQL (ver lib/live-codes.ts), então todo código gravado tem a sua linha aqui.
+ */
+export const liveCodes = pgTable(
+  "live_codes",
+  {
+    code: text("code").primaryKey(),
+    eventId: uuid("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    /** public = events.id · mesa = access_codes.id · room = judging_rooms.id */
+    kind: text("kind").$type<"public" | "mesa" | "room">().notNull(),
+    refId: uuid("ref_id").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index("live_codes_event_idx").on(t.eventId), index("live_codes_ref_idx").on(t.kind, t.refId)],
+);
+
+export type LiveCodeRow = typeof liveCodes.$inferSelect;

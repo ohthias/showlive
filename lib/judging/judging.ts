@@ -12,8 +12,8 @@ import {
   teams,
   type EventRow,
 } from "@/db/schema";
-import { getIdentity, getMembership, hasRole, type MemberRole } from "./access";
-import { readJudgeSession } from "./referee";
+import { getIdentity, getMembership, hasRole, type MemberRole } from "../auth/access";
+import { readJudgeSession } from "../auth/referee";
 import { roomRubrics } from "./rubric";
 
 /**

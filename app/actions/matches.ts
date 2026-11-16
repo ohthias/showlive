@@ -4,12 +4,12 @@ import { and, eq, max } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/db/client";
 import { activity, eventSettings, matches, teams, type EventRow, type MatchRow } from "@/db/schema";
-import { getScorer, requireEventRole, requireScoreEditor, type ScorerIdentity } from "@/lib/access";
-import { cleanText, run, UserError } from "@/lib/action";
-import { buildMatchSchedule, scoreMatch, type AllianceConfig, type AllianceSlot, type MatchResult, type TeamMatchFlag } from "@/lib/alliance";
-import { sanitizeCustomResponses, type Challenge } from "@/lib/challenge";
-import { nudge } from "@/lib/live-hub";
-import { getEventById } from "@/lib/snapshot";
+import { getScorer, requireEventRole, requireScoreEditor, type ScorerIdentity } from "@/lib/auth/access";
+import { cleanText, run, UserError } from "@/lib/auth/action";
+import { buildMatchSchedule, scoreMatch, type AllianceConfig, type AllianceSlot, type MatchResult, type TeamMatchFlag } from "@/lib/competition/alliance";
+import { sanitizeCustomResponses, type Challenge } from "@/lib/competition/challenge";
+import { nudge } from "@/lib/live/live-hub";
+import { getEventById } from "@/lib/live/snapshot";
 
 /**
  * Partidas do formato de alianças: cronograma (hub), lançamento pela mesa,

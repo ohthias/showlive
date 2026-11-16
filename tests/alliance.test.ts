@@ -6,9 +6,9 @@ import {
   scoreMatch,
   seededRandom,
   type RankMatch,
-} from "@/lib/alliance";
-import { ALLIANCE_PRESETS, findAlliancePreset } from "@/lib/alliance-presets";
-import { sanitizeChallenge } from "@/lib/challenge";
+} from "@/lib/competition/alliance";
+import { ALLIANCE_PRESETS, findAlliancePreset } from "@/lib/competition/alliance-presets";
+import { sanitizeChallenge } from "@/lib/competition/challenge";
 
 const ftc = sanitizeChallenge(findAlliancePreset("ftc")!.challenge);
 const cfg = ftc.alliance!;

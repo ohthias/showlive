@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import { getDb } from "@/db/client";
 import { judgingRooms, judgingSessions, rubricEvaluations, teams } from "@/db/schema";
 import { FeedbackSheet } from "@/components/judging/FeedbackSheet";
-import { loadHubEvent } from "@/lib/hub-data";
-import { loadRubrics } from "@/lib/judging";
-import { scoreRubric } from "@/lib/rubric";
+import { loadHubEvent } from "@/lib/live/hub-data";
+import { loadRubrics } from "@/lib/judging/judging";
+import { scoreRubric } from "@/lib/judging/rubric";
 
 export const dynamic = "force-dynamic";
 

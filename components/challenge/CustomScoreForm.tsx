@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Flag, Minus, Plus, TimerReset } from "lucide-react";
-import { itemRange, itemValue, type Challenge, type ChallengeItem, type CustomResponses } from "@/lib/challenge";
-import { formatSeconds, formatValue } from "@/lib/format";
+import { itemRange, itemValue, type Challenge, type ChallengeItem, type CustomResponses } from "@/lib/competition/challenge";
+import { formatSeconds, formatValue } from "@/lib/competition/format";
 import { MissionImage } from "@/components/mesa/MissionImage";
 
 /**

@@ -4,7 +4,7 @@ import { useTransition } from "react";
 import { Pause, Play, RotateCcw } from "lucide-react";
 import { controlTimer } from "@/app/actions/settings";
 import { useToast } from "@/components/ui/Toast";
-import type { TimerState } from "@/lib/live-types";
+import type { TimerState } from "@/lib/live/live-types";
 import { useTimer } from "./TimerDisplay";
 
 /** Controles do cronômetro compartilhado (mesa e hub). */

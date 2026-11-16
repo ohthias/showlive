@@ -4,14 +4,14 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/db/client";
 import { activity, eventSettings, events, rounds, scores, teams, type EventTheme } from "@/db/schema";
-import { getScorer, requireEventRole } from "@/lib/access";
-import { run, UserError } from "@/lib/action";
-import { nudge } from "@/lib/live-hub";
-import type { LiveSettings } from "@/lib/live-types";
-import { getEventById } from "@/lib/snapshot";
-import { sanitizeTheme } from "@/lib/themes";
-import { timerRemaining } from "@/lib/timer";
-import { cleanMessage, MESSAGE_DURATIONS, sanitizeCamera, type CameraSettings, type ScreenMessageTone } from "@/lib/screen";
+import { getScorer, requireEventRole } from "@/lib/auth/access";
+import { run, UserError } from "@/lib/auth/action";
+import { nudge } from "@/lib/live/live-hub";
+import type { LiveSettings } from "@/lib/live/live-types";
+import { getEventById } from "@/lib/live/snapshot";
+import { sanitizeTheme } from "@/lib/live/themes";
+import { timerRemaining } from "@/lib/live/timer";
+import { cleanMessage, MESSAGE_DURATIONS, sanitizeCamera, type CameraSettings, type ScreenMessageTone } from "@/lib/live/screen";
 
 const BOOL_KEYS = [
   "showOnlyCurrentRound",

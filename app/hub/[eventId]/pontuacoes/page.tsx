@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { ScoresMatrix } from "@/components/hub/ScoresMatrix";
-import { loadHubEvent } from "@/lib/hub-data";
-import { getMissions } from "@/lib/missions";
-import { buildSnapshot } from "@/lib/snapshot";
+import { loadHubEvent } from "@/lib/live/hub-data";
+import { getMissions } from "@/lib/competition/missions";
+import { buildSnapshot } from "@/lib/live/snapshot";
 
 export const dynamic = "force-dynamic";
 

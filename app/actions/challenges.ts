@@ -5,13 +5,13 @@ import { and, desc, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/db/client";
 import { activity, challengeTemplates, events, rounds, scores, userPreferences } from "@/db/schema";
-import { requireEventRole } from "@/lib/access";
-import { run, UserError } from "@/lib/action";
-import { newId, sanitizeChallenge, type Challenge } from "@/lib/challenge";
-import { defaultLeague, sanitizeLeague, type ObrLeague } from "@/lib/obr";
-import { nudge } from "@/lib/live-hub";
-import { DEFAULT_PREFS, type UserPrefs } from "@/lib/prefs";
-import { rescoreMatches } from "@/lib/matches";
+import { requireEventRole } from "@/lib/auth/access";
+import { run, UserError } from "@/lib/auth/action";
+import { newId, sanitizeChallenge, type Challenge } from "@/lib/competition/challenge";
+import { defaultLeague, sanitizeLeague, type ObrLeague } from "@/lib/obr/obr";
+import { nudge } from "@/lib/live/live-hub";
+import { DEFAULT_PREFS, type UserPrefs } from "@/lib/auth/prefs";
+import { rescoreMatches } from "@/lib/competition/matches";
 
 function validate(input: unknown): Challenge {
   try {

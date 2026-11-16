@@ -2,10 +2,10 @@ import "server-only";
 import { and, asc, desc, eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { activity, eventSettings, events, matches, rounds, scores, teams, type EventRow, type EventSettingsRow } from "@/db/schema";
-import { challengeGroups } from "./alliance-config";
+import { challengeGroups } from "../competition/alliance-config";
 import { DEFAULT_CAMERA } from "./screen";
-import { formatLabel, scoringOf } from "./event-format";
-import { computePlayoffs, roundProgress } from "./ranking";
+import { formatLabel, scoringOf } from "../competition/event-format";
+import { computePlayoffs, roundProgress } from "../competition/ranking";
 import type { LiveSettings, LiveSnapshot } from "./live-types";
 
 /** Evento pelo código público — só encontra eventos AO VIVO. */

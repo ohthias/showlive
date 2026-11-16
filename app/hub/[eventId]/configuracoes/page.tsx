@@ -2,8 +2,8 @@ import { asc, eq, sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { eventSettings, rounds, scores, teams } from "@/db/schema";
 import { EventSettingsForm } from "@/components/hub/EventSettingsForm";
-import { loadHubEvent } from "@/lib/hub-data";
-import { toLiveSettings } from "@/lib/snapshot";
+import { loadHubEvent } from "@/lib/live/hub-data";
+import { toLiveSettings } from "@/lib/live/snapshot";
 
 export const dynamic = "force-dynamic";
 

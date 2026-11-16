@@ -1,4 +1,4 @@
-import type { Challenge } from "./challenge-types";
+import type { Challenge } from "../competition/challenge-types";
 
 /** Perigos do trajeto (Caderno Verde da OBR). */
 export type HazardKey = "intersecoes" | "gangorras" | "obstaculos" | "gaps" | "rampas" | "lombadas" | "passagens";

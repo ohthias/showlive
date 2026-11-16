@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { Flag, Minus, Plus, Sparkles, TimerReset } from "lucide-react";
-import { checkpointRate, HAZARDS, MAX_MORTAS, MAX_VIVAS, scoreObr, type ObrArena, type ObrResponses } from "@/lib/obr";
-import { formatSeconds } from "@/lib/format";
+import { checkpointRate, HAZARDS, MAX_MORTAS, MAX_VIVAS, scoreObr, type ObrArena, type ObrResponses } from "@/lib/obr/obr";
+import { formatSeconds } from "@/lib/competition/format";
 
 /**
  * Súmula da OBR Resgate para a mesa. Tudo é limitado pelo modelo de arena

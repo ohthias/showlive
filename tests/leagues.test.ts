@@ -1,9 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { arenaMaxScore, defaultArena, defaultLeague, emptyResponses, sanitizeLeague, sanitizeObrResponses, scoreObr } from "@/lib/obr";
-import { futureEditionChallenge } from "@/lib/future-edition";
-import { sanitizeChallenge, scoreChallenge } from "@/lib/challenge";
-import { computeExtraRanking, computeRanking } from "@/lib/ranking";
-import type { LiveRound, LiveScore, LiveTeam } from "@/lib/live-types";
+import { arenaMaxScore, defaultArena, defaultLeague, emptyResponses, sanitizeLeague, sanitizeObrResponses, scoreObr } from "@/lib/obr/obr";
+import { futureEditionChallenge } from "@/lib/competition/future-edition";
+import { sanitizeChallenge, scoreChallenge } from "@/lib/competition/challenge";
+import { computeExtraRanking, computeRanking } from "@/lib/competition/ranking";
+import type { LiveRound, LiveScore, LiveTeam } from "@/lib/live/live-types";
 
 describe("OBR Resgate", () => {
   const arena = defaultArena(0); // seções [6,6,5], 4 interseções, 1 gangorra...

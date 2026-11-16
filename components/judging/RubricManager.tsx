@@ -6,8 +6,8 @@ import { addRubricPresets, deleteRubric, moveRubric, saveRubric } from "@/app/ac
 import { cornerBtn, EmptyState, Panel, Tag } from "@/components/ui/brand";
 import { useConfirm } from "@/components/ui/Confirm";
 import { useToast } from "@/components/ui/Toast";
-import { allCriteria, blankRubric, LIMITS, rubricId, scoreRubric } from "@/lib/rubric";
-import type { RubricCriterion, RubricDefinition } from "@/lib/rubric-types";
+import { allCriteria, blankRubric, LIMITS, rubricId, scoreRubric } from "@/lib/judging/rubric";
+import type { RubricCriterion, RubricDefinition } from "@/lib/judging/rubric-types";
 
 type Rubric = { id: string; name: string; description: string | null; weight: number; definition: RubricDefinition; sheets: number };
 type PresetSummary = {

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Camera, CameraOff, Check, Video } from "lucide-react";
-import { cameraEmbed, type CameraSettings } from "@/lib/screen";
+import { cameraEmbed, type CameraSettings } from "@/lib/live/screen";
 
 /**
  * Câmera do telão.

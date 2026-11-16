@@ -2,7 +2,7 @@ import { asc, eq, sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { scores, teams } from "@/db/schema";
 import { TeamsManager } from "@/components/hub/TeamsManager";
-import { loadHubEvent } from "@/lib/hub-data";
+import { loadHubEvent } from "@/lib/live/hub-data";
 
 export const dynamic = "force-dynamic";
 

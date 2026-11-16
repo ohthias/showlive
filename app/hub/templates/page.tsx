@@ -3,9 +3,9 @@ import { auth } from "@clerk/nextjs/server";
 import { ArrowLeft, LayoutTemplate, ListChecks, Plus, Ruler, Scale, Swords, Timer } from "lucide-react";
 import { TemplateActions } from "@/components/challenge/TemplateActions";
 import { cornerBtn, EmptyState, Panel } from "@/components/ui/brand";
-import { CHALLENGE_PRESETS, CHALLENGE_TYPES, type ChallengeType } from "@/lib/challenge";
-import { loadTemplates } from "@/lib/hub-data";
-import { ALLIANCE_PRESETS } from "@/lib/alliance-presets";
+import { CHALLENGE_PRESETS, CHALLENGE_TYPES, type ChallengeType } from "@/lib/competition/challenge";
+import { loadTemplates } from "@/lib/live/hub-data";
+import { ALLIANCE_PRESETS } from "@/lib/competition/alliance-presets";
 
 export const dynamic = "force-dynamic";
 const ICON = { missions: ListChecks, time: Timer, judged: Scale, measure: Ruler } as const;

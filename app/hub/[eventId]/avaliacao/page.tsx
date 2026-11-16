@@ -2,9 +2,9 @@ import { asc, eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { teams } from "@/db/schema";
 import { ScheduleManager } from "@/components/judging/ScheduleManager";
-import { hasRole } from "@/lib/access";
-import { loadHubEvent } from "@/lib/hub-data";
-import { judgingSettings, loadRooms, loadRubrics, loadSessions } from "@/lib/judging";
+import { hasRole } from "@/lib/auth/access";
+import { loadHubEvent } from "@/lib/live/hub-data";
+import { judgingSettings, loadRooms, loadRubrics, loadSessions } from "@/lib/judging/judging";
 
 export const dynamic = "force-dynamic";
 

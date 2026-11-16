@@ -36,11 +36,11 @@ import {
   type ChallengeType,
   type CustomResponses,
   type ItemKind,
-} from "@/lib/challenge";
-import { formatScore } from "@/lib/format";
+} from "@/lib/competition/challenge";
+import { formatScore } from "@/lib/competition/format";
 import { ChallengeSheet } from "./ChallengeSheet";
 import { AllianceConfigPanel } from "./AllianceConfigPanel";
-import { challengeGroups } from "@/lib/alliance-config";
+import { challengeGroups } from "@/lib/competition/alliance-config";
 import { CustomScoreForm } from "./CustomScoreForm";
 
 type Mode =

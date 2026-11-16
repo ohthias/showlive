@@ -4,7 +4,7 @@ import { UserButton } from "@clerk/nextjs";
 import { ArrowUpRight, LayoutTemplate, SlidersHorizontal } from "lucide-react";
 import { ByRoboStage, Logo, Tag } from "@/components/ui/brand";
 import { ThemeController } from "@/components/ui/ThemeController";
-import { claimPendingInvites, getIdentity } from "@/lib/access";
+import { claimPendingInvites, getIdentity } from "@/lib/auth/access";
 
 export const metadata: Metadata = { title: "Hub", robots: { index: false } };
 

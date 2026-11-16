@@ -1,9 +1,9 @@
 "use client";
 
 import { useMemo } from "react";
-import type { LiveSnapshot } from "@/lib/live-types";
-import { computeRanking } from "@/lib/ranking";
-import { formatValue } from "@/lib/format";
+import type { LiveSnapshot } from "@/lib/live/live-types";
+import { computeRanking } from "@/lib/competition/ranking";
+import { formatValue } from "@/lib/competition/format";
 
 /** Classificação compacta para a mesa (quando a organização permite). */
 export function MesaRanking({ snapshot: s }: { snapshot: LiveSnapshot }) {

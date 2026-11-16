@@ -4,9 +4,9 @@ import { and, asc, eq, max, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getDb } from "@/db/client";
 import { rounds, scores, teams } from "@/db/schema";
-import { requireEventRole } from "@/lib/access";
-import { cleanText, run, UserError } from "@/lib/action";
-import { nudge } from "@/lib/live-hub";
+import { requireEventRole } from "@/lib/auth/access";
+import { cleanText, run, UserError } from "@/lib/auth/action";
+import { nudge } from "@/lib/live/live-hub";
 
 /**
  * Aceita uma equipe por linha. Formatos:

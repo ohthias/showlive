@@ -14,11 +14,11 @@ import {
   teams,
   type JudgingSessionRow,
 } from "@/db/schema";
-import { AccessError, requireEventRole } from "@/lib/access";
-import { cleanText, run, UserError } from "@/lib/action";
-import { normalizeCode } from "@/lib/codes";
-import { getJudge, judgeCanEdit, judgingSettings } from "@/lib/judging";
-import { clearJudgeSession, writeJudgeSession } from "@/lib/referee";
+import { AccessError, requireEventRole } from "@/lib/auth/access";
+import { cleanText, run, UserError } from "@/lib/auth/action";
+import { normalizeCode } from "@/lib/codes/codes";
+import { getJudge, judgeCanEdit, judgingSettings } from "@/lib/judging/judging";
+import { clearJudgeSession, writeJudgeSession } from "@/lib/auth/referee";
 import {
   buildSchedule,
   LIMITS,
@@ -29,10 +29,11 @@ import {
   sanitizeScores,
   scoreRubric,
   submitProblems,
-} from "@/lib/rubric";
-import { findPresetGroup } from "@/lib/rubric-presets";
-import type { JudgingSessionStatus, RubricDefinition } from "@/lib/rubric-types";
-import { uniqueCode } from "@/lib/unique-code";
+} from "@/lib/judging/rubric";
+import { findPresetGroup } from "@/lib/judging/rubric-presets";
+import type { JudgingSessionStatus, RubricDefinition } from "@/lib/judging/rubric-types";
+import { codeAttemptBlocked, recordCodeFailure } from "@/lib/codes/code-attempts";
+import { assignLiveCode, releaseLiveCode, resolveCode } from "@/lib/codes/unique-code";
 
 /**
  * Avaliação por rubricas: rubricas, salas, cronograma e fichas.
@@ -182,7 +183,9 @@ export async function addRoom(eventId: string, rawName: string) {
       const existing = await db.select({ id: judgingRooms.id }).from(judgingRooms).where(eq(judgingRooms.eventId, eventId));
       if (existing.length >= LIMITS.roomsPerEvent) throw new UserError(`Limite de ${LIMITS.roomsPerEvent} salas.`);
       const name = cleanText(rawName, 40) || `Sala ${existing.length + 1}`;
-      await db.insert(judgingRooms).values({ eventId, name, code: event.status === "live" ? await uniqueCode() : null });
+      const [row] = await db.insert(judgingRooms).values({ eventId, name, code: null }).returning({ id: judgingRooms.id });
+      // Com o evento ao vivo a sala já nasce com o código dela.
+      if (event.status === "live") await assignLiveCode(eventId, "room", row.id);
       refresh(eventId);
       return null;
     },
@@ -220,10 +223,8 @@ export async function rotateRoomCode(eventId: string, roomId: string) {
     const { event } = await requireEventRole(eventId, "admin");
     if (event.status !== "live") throw new UserError("Os códigos só existem com o evento ao vivo.");
     const db = await getDb();
-    await db
-      .update(judgingRooms)
-      .set({ code: await uniqueCode(), active: true, lastUsedAt: null })
-      .where(and(eq(judgingRooms.id, roomId), eq(judgingRooms.eventId, eventId)));
+    await assignLiveCode(eventId, "room", roomId);
+    await db.update(judgingRooms).set({ active: true }).where(and(eq(judgingRooms.id, roomId), eq(judgingRooms.eventId, eventId)));
     refresh(eventId);
     return null;
   });
@@ -235,6 +236,7 @@ export async function deleteRoom(eventId: string, roomId: string) {
     const db = await getDb();
     // As sessões ficam sem sala (room_id = null) e as fichas são mantidas.
     await db.delete(judgingRooms).where(and(eq(judgingRooms.id, roomId), eq(judgingRooms.eventId, eventId)));
+    await releaseLiveCode("room", roomId);
     refresh(eventId);
     return null;
   });
@@ -527,15 +529,31 @@ export async function setJudgingSettings(
 
 /* ------------------------------------------------- entrada por código */
 
-export async function joinBanca(raw: string, rawName: string) {
+/**
+ * Avaliador entra na sala com o código dela. O código é resolvido pelo
+ * registro global (um código = uma sala de um evento) e, se veio do passo de
+ * confirmação em /entrar, precisa levar exatamente à sala que foi mostrada.
+ * O cookie sl_banca guarda evento + sala + código: trocar de código, desativar
+ * a sala ou tirar o evento do ar derruba o acesso na hora.
+ */
+export async function joinBanca(raw: string, rawName: string, expectedRoomId?: string) {
+  const blocked = await codeAttemptBlocked();
+  if (blocked) return { ok: false as const, error: blocked };
   const code = normalizeCode(raw);
   const name = cleanText(rawName, 30);
   const db = await getDb();
+  const target = await resolveCode(code);
+  if (!target || target.kind !== "room") {
+    await recordCodeFailure();
+    return { ok: false as const, error: "Código inválido, desativado ou evento fora do ar." };
+  }
+  if (expectedRoomId && expectedRoomId !== target.refId)
+    return { ok: false as const, error: "Este código mudou desde que você o digitou. Volte e digite de novo." };
   const [room] = await db
     .select({ id: judgingRooms.id, eventId: judgingRooms.eventId, active: judgingRooms.active, code: judgingRooms.code, status: events.status })
     .from(judgingRooms)
     .innerJoin(events, eq(events.id, judgingRooms.eventId))
-    .where(eq(judgingRooms.code, code))
+    .where(and(eq(judgingRooms.id, target.refId), eq(judgingRooms.eventId, target.eventId), eq(judgingRooms.code, code)))
     .limit(1);
   if (!room?.active || !room.code || room.status !== "live")
     return { ok: false as const, error: "Código inválido, desativado ou evento fora do ar." };

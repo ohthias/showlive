@@ -2,9 +2,9 @@ import { eq, sql } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { rubricEvaluations } from "@/db/schema";
 import { RubricManager } from "@/components/judging/RubricManager";
-import { loadHubEvent } from "@/lib/hub-data";
-import { loadRubrics } from "@/lib/judging";
-import { RUBRIC_PRESET_GROUPS, suggestedPresetGroup } from "@/lib/rubric-presets";
+import { loadHubEvent } from "@/lib/live/hub-data";
+import { loadRubrics } from "@/lib/judging/judging";
+import { RUBRIC_PRESET_GROUPS, suggestedPresetGroup } from "@/lib/judging/rubric-presets";
 
 export const dynamic = "force-dynamic";
 

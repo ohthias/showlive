@@ -1,5 +1,5 @@
-import { resolveLiveKey } from "@/lib/audience";
-import { getSnapshot } from "@/lib/live-hub";
+import { resolveLiveKey } from "@/lib/auth/audience";
+import { getSnapshot } from "@/lib/live/live-hub";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

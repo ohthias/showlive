@@ -7,8 +7,8 @@ import { deleteEvaluation, reopenEvaluation } from "@/app/actions/judging";
 import { EmptyState, Tag } from "@/components/ui/brand";
 import { useConfirm } from "@/components/ui/Confirm";
 import { useToast } from "@/components/ui/Toast";
-import type { RubricScore } from "@/lib/rubric";
-import type { EvaluationComments, EvaluationFeedback, EvaluationScores, RubricDefinition } from "@/lib/rubric-types";
+import type { RubricScore } from "@/lib/judging/rubric";
+import type { EvaluationComments, EvaluationFeedback, EvaluationScores, RubricDefinition } from "@/lib/judging/rubric-types";
 import { LocalTime, pct } from "./shared";
 
 type Sheet = {

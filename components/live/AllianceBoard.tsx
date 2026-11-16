@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { computeAllianceRanking, tiebreakerLabel, type AllianceRankRow } from "@/lib/alliance";
-import type { LiveMatch, LiveSnapshot, LiveTeam } from "@/lib/live-types";
+import { computeAllianceRanking, tiebreakerLabel, type AllianceRankRow } from "@/lib/competition/alliance";
+import type { LiveMatch, LiveSnapshot, LiveTeam } from "@/lib/live/live-types";
 
 const RED = "#e5484d";
 const BLUE = "#3b82f6";

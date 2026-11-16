@@ -2,9 +2,9 @@
 
 import { memo } from "react";
 import { AlertTriangle, Ban } from "lucide-react";
-import type { Mission } from "@/lib/missions";
+import type { Mission } from "@/lib/competition/missions";
 import { MissionImage } from "./MissionImage";
-import { computeMissionBreakdown, NON_SCORING_MISSIONS, type MissionResponses, type RoundResponses } from "@/lib/scoring";
+import { computeMissionBreakdown, NON_SCORING_MISSIONS, type MissionResponses, type RoundResponses } from "@/lib/competition/scoring";
 
 type OnSelect = (missionId: string, index: number, idx: number) => void;
 

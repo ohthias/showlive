@@ -6,10 +6,10 @@ import { Blocks, LayoutTemplate, ListChecks, Map, Minus, Plus, Radio, Ruler, Sca
 import { createEvent, type CreateEventInput } from "@/app/actions/events";
 import { cornerBtn } from "@/components/ui/brand";
 import { useToast } from "@/components/ui/Toast";
-import { CHALLENGE_PRESETS, CHALLENGE_TYPES, type ChallengeType } from "@/lib/challenge";
-import { SEASONS } from "@/lib/missions";
-import { ALLIANCE_PRESETS } from "@/lib/alliance-presets";
-import type { UserPrefs } from "@/lib/prefs";
+import { CHALLENGE_PRESETS, CHALLENGE_TYPES, type ChallengeType } from "@/lib/competition/challenge";
+import { SEASONS } from "@/lib/competition/missions";
+import { ALLIANCE_PRESETS } from "@/lib/competition/alliance-presets";
+import type { UserPrefs } from "@/lib/auth/prefs";
 
 type Tpl = { id: string; name: string; type: string; alliance?: boolean };
 type Source = NonNullable<CreateEventInput["source"]>;

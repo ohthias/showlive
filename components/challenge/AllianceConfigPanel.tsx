@@ -2,8 +2,8 @@
 
 import { ArrowDown, ArrowUp, Plus, Swords, Trash2, Users } from "lucide-react";
 import { Panel } from "@/components/ui/brand";
-import { ALLIANCE_LIMITS, RANK_BY_LABELS, TIEBREAKER_LABELS, tiebreakerLabel } from "@/lib/alliance-config";
-import type { AllianceConfig } from "@/lib/alliance-types";
+import { ALLIANCE_LIMITS, RANK_BY_LABELS, TIEBREAKER_LABELS, tiebreakerLabel } from "@/lib/competition/alliance-config";
+import type { AllianceConfig } from "@/lib/competition/alliance-types";
 
 /** Configuração das alianças dentro do construtor de desafios. */
 export function AllianceConfigPanel({

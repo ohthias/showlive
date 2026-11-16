@@ -1,8 +1,8 @@
 "use client";
 
 import { useServerClock } from "@/hooks/useLiveEvent";
-import type { TimerState } from "@/lib/live-types";
-import { formatClock, timerRemaining, timerStatus } from "@/lib/timer";
+import type { TimerState } from "@/lib/live/live-types";
+import { formatClock, timerRemaining, timerStatus } from "@/lib/live/timer";
 
 export function useTimer(timer: TimerState, clockOffset: number) {
   const now = useServerClock(clockOffset, 200);

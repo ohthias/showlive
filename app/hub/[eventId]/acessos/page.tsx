@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import { getDb } from "@/db/client";
 import { rounds } from "@/db/schema";
 import { AccessManager } from "@/components/hub/AccessManager";
-import { loadAccess, loadHubEvent } from "@/lib/hub-data";
+import { loadAccess, loadHubEvent } from "@/lib/live/hub-data";
 
 export const dynamic = "force-dynamic";
 

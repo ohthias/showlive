@@ -5,8 +5,8 @@ import { auth } from "@clerk/nextjs/server";
 import { notFound, redirect } from "next/navigation";
 import { getDb } from "@/db/client";
 import { accessCodes, challengeTemplates, eventMembers, events, scores, teams, userPreferences } from "@/db/schema";
-import { mergePrefs } from "./prefs";
-import { AccessError, requireEventRole, type MemberRole } from "./access";
+import { mergePrefs } from "../auth/prefs";
+import { AccessError, requireEventRole, type MemberRole } from "../auth/access";
 
 export async function listMyEvents(userId: string) {
   const db = await getDb();

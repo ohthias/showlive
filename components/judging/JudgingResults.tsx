@@ -6,7 +6,7 @@ import { AlertTriangle, Download, FileText, Lock, LockOpen, Medal, Trophy } from
 import { setJudgingSettings } from "@/app/actions/judging";
 import { EmptyState, Panel } from "@/components/ui/brand";
 import { useToast } from "@/components/ui/Toast";
-import type { OverallRow, RubricRankingRow } from "@/lib/rubric";
+import type { OverallRow, RubricRankingRow } from "@/lib/judging/rubric";
 import { pct } from "./shared";
 
 type Rubric = { id: string; name: string; weight: number };

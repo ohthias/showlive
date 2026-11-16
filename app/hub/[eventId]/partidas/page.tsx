@@ -1,8 +1,8 @@
 import { notFound } from "next/navigation";
 import { MatchesManager } from "@/components/hub/MatchesManager";
-import { hasRole } from "@/lib/access";
-import { loadHubEvent } from "@/lib/hub-data";
-import { buildSnapshot } from "@/lib/snapshot";
+import { hasRole } from "@/lib/auth/access";
+import { loadHubEvent } from "@/lib/live/hub-data";
+import { buildSnapshot } from "@/lib/live/snapshot";
 
 export const dynamic = "force-dynamic";
 

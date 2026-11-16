@@ -17,18 +17,18 @@ import {
   teams,
   userPreferences,
 } from "@/db/schema";
-import { blankChallenge, CHALLENGE_PRESETS, CHALLENGE_TYPES, sanitizeChallenge, type Challenge, type ChallengeType } from "@/lib/challenge";
-import { clearLiveCodes, generateLiveCodes } from "@/lib/code-lifecycle";
-import { mergePrefs } from "@/lib/prefs";
-import { futureEditionChallenge } from "@/lib/future-edition";
-import { defaultLeague, sanitizeLeague, type ObrLeague } from "@/lib/obr";
-import { getIdentity, requireEventRole } from "@/lib/access";
-import { cleanText, run, UserError } from "@/lib/action";
-import { uniqueCode } from "@/lib/unique-code";
-import { nudge } from "@/lib/live-hub";
-import { isSeason } from "@/lib/missions";
-import { THEME_PRESETS, themeForSeason } from "@/lib/themes";
-import { findAlliancePreset } from "@/lib/alliance-presets";
+import { blankChallenge, CHALLENGE_PRESETS, CHALLENGE_TYPES, sanitizeChallenge, type Challenge, type ChallengeType } from "@/lib/competition/challenge";
+import { clearLiveCodes, generateLiveCodes } from "@/lib/codes/code-lifecycle";
+import { mergePrefs } from "@/lib/auth/prefs";
+import { futureEditionChallenge } from "@/lib/competition/future-edition";
+import { defaultLeague, sanitizeLeague, type ObrLeague } from "@/lib/obr/obr";
+import { getIdentity, requireEventRole } from "@/lib/auth/access";
+import { cleanText, run, UserError } from "@/lib/auth/action";
+import { assignLiveCode } from "@/lib/codes/unique-code";
+import { nudge } from "@/lib/live/live-hub";
+import { isSeason } from "@/lib/competition/missions";
+import { THEME_PRESETS, themeForSeason } from "@/lib/live/themes";
+import { findAlliancePreset } from "@/lib/competition/alliance-presets";
 
 export interface CreateEventInput {
   name: string;
@@ -234,9 +234,7 @@ export async function regeneratePublicCode(eventId: string) {
   return run(async () => {
     const { event } = await requireEventRole(eventId, "admin");
     if (event.status !== "live") throw new UserError("O código só existe com o evento ao vivo.");
-    const db = await getDb();
-    const code = await uniqueCode();
-    await db.update(events).set({ code }).where(eq(events.id, eventId));
+    const code = await assignLiveCode(eventId, "public", eventId);
     revalidatePath(`/hub/${eventId}`, "layout");
     return { code };
   });

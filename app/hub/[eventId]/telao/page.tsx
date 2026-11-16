@@ -3,8 +3,8 @@ import { getDb } from "@/db/client";
 import { eventSettings } from "@/db/schema";
 import { ThemeEditor } from "@/components/hub/ThemeEditor";
 import { CameraSettingsPanel } from "@/components/hub/CameraSettingsPanel";
-import { loadHubEvent } from "@/lib/hub-data";
-import { toLiveSettings } from "@/lib/snapshot";
+import { loadHubEvent } from "@/lib/live/hub-data";
+import { toLiveSettings } from "@/lib/live/snapshot";
 
 export const dynamic = "force-dynamic";
 

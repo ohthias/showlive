@@ -8,14 +8,14 @@ import { saveEvaluation, setSessionStatus } from "@/app/actions/judging";
 import { cornerBtn, Tag } from "@/components/ui/brand";
 import { useConfirm } from "@/components/ui/Confirm";
 import { useToast } from "@/components/ui/Toast";
-import { allCriteria, scoreRubric, submitProblems } from "@/lib/rubric";
+import { allCriteria, scoreRubric, submitProblems } from "@/lib/judging/rubric";
 import type {
   EvaluationComments,
   EvaluationFeedback,
   EvaluationScores,
   JudgingSessionStatus,
   RubricDefinition,
-} from "@/lib/rubric-types";
+} from "@/lib/judging/rubric-types";
 import { LocalTime, pct, SessionStatusPill } from "./shared";
 
 export interface FormRubric {

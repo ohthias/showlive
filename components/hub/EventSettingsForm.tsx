@@ -10,8 +10,8 @@ import { addRound, deleteRound, moveRound, renameRound } from "@/app/actions/tea
 import { cornerBtn, Panel } from "@/components/ui/brand";
 import { useConfirm } from "@/components/ui/Confirm";
 import { useToast } from "@/components/ui/Toast";
-import type { LiveSettings } from "@/lib/live-types";
-import { SEASONS } from "@/lib/missions";
+import type { LiveSettings } from "@/lib/live/live-types";
+import { SEASONS } from "@/lib/competition/missions";
 import { SettingToggle } from "./SettingToggle";
 import { VolunteerAdminSettings } from "./VolunteerAdminSettings";
 

@@ -2,8 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { ChallengeBuilder } from "@/components/challenge/ChallengeBuilder";
-import { blankChallenge } from "@/lib/challenge";
-import { loadHubEvent } from "@/lib/hub-data";
+import { blankChallenge } from "@/lib/competition/challenge";
+import { loadHubEvent } from "@/lib/live/hub-data";
 
 export const dynamic = "force-dynamic";
 
