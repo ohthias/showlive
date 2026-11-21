@@ -34,7 +34,8 @@ export function EventNav({
   const path = usePathname();
   const base = `/hub/${eventId}`;
   return (
-    <nav aria-label="Seções do evento" className="flex gap-1 overflow-x-auto lg:flex-col">
+    <nav aria-label="Seções do evento" className="flex gap-0.5 overflow-x-auto rounded-lg border border-base-300 bg-base-100 p-1.5 lg:flex-col">
+      <p className="hidden px-2 pb-1 pt-1.5 text-[11px] font-semibold uppercase tracking-wider text-base-content/45 lg:block">Evento</p>
       {ITEMS.filter((i) => (isAdmin || !i.admin || ("scoresEditor" in i && canEditScores)) && (!("only" in i) || i.only === format) && (!("not" in i) || i.not !== format)).map(({ href, label, icon: Icon }) => {
         const full = base + href;
         const active = href ? path.startsWith(full) : path === base;
@@ -43,11 +44,17 @@ export function EventNav({
             key={href + label}
             href={full}
             aria-current={active ? "page" : undefined}
-            className={`flex shrink-0 items-center gap-2.5 rounded-tl-lg rounded-br-lg px-3 py-2 text-sm font-medium transition ${
-              active ? "bg-base-content text-base-100" : "text-base-content/70 hover:bg-base-300/60 hover:text-base-content"
+            className={`group flex shrink-0 items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-primary ${
+              active ? "bg-primary/10 text-primary" : "text-base-content/75 hover:bg-base-content/[0.05] hover:text-base-content"
             }`}
           >
-            <Icon size={16} />
+            <span
+              className={`grid size-7 shrink-0 place-items-center rounded-md transition-colors ${
+                active ? "bg-primary text-primary-content" : "bg-base-200 text-base-content/70"
+              }`}
+            >
+              <Icon size={15} />
+            </span>
             {label}
           </Link>
         );

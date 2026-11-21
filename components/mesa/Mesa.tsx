@@ -289,8 +289,8 @@ export function Mesa({ initial, form, scorerLabel, via, confirmBeforeSend = true
   /* ================================================================ */
 
   return (
-    <div className={`min-h-dvh bg-base-200/50 ${device.large ? "mesa-large" : ""}`}>
-      <header className="sticky top-0 z-30 border-b border-base-300 bg-base-100/90 backdrop-blur">
+    <div data-texture="off" className={`stage-tool min-h-dvh bg-base-200/50 ${device.large ? "mesa-large" : ""}`}>
+      <header className="sticky top-0 z-30 border-b border-base-300 bg-base-100/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
@@ -573,7 +573,7 @@ export function Mesa({ initial, form, scorerLabel, via, confirmBeforeSend = true
               type="button"
               disabled={pending || locked || paused || (s.settings.requireTeamConfirmation && !teamConfirmed)}
               onClick={send}
-              className={`btn btn-primary btn-lg ${cornerBtn} shadow-[4px_4px_0_0_var(--color-base-content)]`}
+              className={`btn btn-primary btn-lg ${cornerBtn}`}
             >
               {pending ? <span className="loading loading-spinner" /> : <Send size={18} />}
               {editing ? "Salvar" : "Enviar"}

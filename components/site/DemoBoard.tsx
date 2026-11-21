@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Trophy } from "lucide-react";
+import { Blob, FlipNumber, StickerTag, Starburst } from "@/components/stage";
 
 const TEAMS = ["Equipe Alfa", "Robôs do Sertão", "Mecatrônicos", "LEGOlândia", "Byte Bandeirante"];
 const START = [312, 285, 270, 240, 198];
@@ -27,11 +28,11 @@ export function DemoBoard() {
 
   return (
     <div className="relative">
-      <div aria-hidden className="absolute -right-4 -top-4 size-24 rotate-12 rounded-tl-2xl rounded-br-2xl bg-accent" />
-      <div aria-hidden className="absolute -bottom-5 -left-5 size-20 rounded-full border-2 border-dashed border-secondary/50" />
+      <Starburst size={96} tone="accent" rotate={12} className="absolute -right-6 -top-7" />
+      <Blob size={80} tone="secondary" className="absolute -bottom-6 -left-6 opacity-80" />
 
       <div
-        className="relative overflow-hidden rounded-tl-3xl rounded-br-3xl border border-base-300 bg-[#1f1c18] text-[#f3ecdc] shadow-[8px_8px_0_0_var(--color-secondary)]"
+        className="stage-night stage-noise relative overflow-hidden rounded-tl-[2rem] rounded-br-[2rem] border border-base-300 shadow-[8px_8px_0_0_var(--color-secondary)]"
         style={{ ["--tv-accent" as string]: "#e04444" }}
       >
         <div className="flex items-center justify-between border-b border-white/10 px-5 py-3">
@@ -39,9 +40,9 @@ export function DemoBoard() {
             <span className="live-dot text-[#e04444]" />
             Telão · Regional Nordeste
           </span>
-          <span className="rounded-sm border border-white/15 px-1.5 py-0.5 font-mono text-[10px] tracking-widest text-white/50">
-            DEMONSTRAÇÃO
-          </span>
+          <StickerTag tone="accent" size="sm" shadow={false} rotate={2}>
+            Demonstração
+          </StickerTag>
         </div>
 
         <ol className="relative" style={{ height: TEAMS.length * 56 }}>
@@ -62,14 +63,12 @@ export function DemoBoard() {
               </span>
               <span className="flex-1 truncate font-semibold">{TEAMS[i]}</span>
               {pos === 0 && <Trophy size={16} className="text-[#fabd32]" />}
-              <span key={s} className="score-pop font-mono text-lg font-bold tabular-nums">
-                {s}
-              </span>
+              <FlipNumber value={s} minDigits={3} className="font-mono text-lg font-bold tabular-nums" />
             </li>
           ))}
         </ol>
 
-        <div className="flex items-center gap-3 bg-[#e04444] px-5 py-2.5 font-mono text-[11px] text-white sm:text-xs">
+        <div className="flex items-center gap-3 stage-noise bg-primary px-5 py-2.5 font-mono text-[11px] text-white sm:text-xs">
           <span className="font-bold tracking-widest">ÚLTIMA NOTA</span>
           <span className="truncate opacity-90">{last ? `${last.team} · ${last.pts} pts` : "aguardando a mesa…"}</span>
         </div>

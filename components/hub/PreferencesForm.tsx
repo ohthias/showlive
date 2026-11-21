@@ -109,7 +109,7 @@ export function PreferencesForm({ initial }: { initial: UserPrefs }) {
         <button
           type="button"
           disabled={!dirty || pending}
-          className={`btn btn-primary ${cornerBtn} shadow-[4px_4px_0_0_var(--color-base-content)]`}
+          className={`btn btn-primary ${cornerBtn}`}
           onClick={() =>
             start(async () => {
               const r = await savePreferences(p);
