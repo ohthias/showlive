@@ -3,7 +3,8 @@ import { auth } from "@clerk/nextjs/server";
 import { ArrowUpRight, CalendarClock, Radio, Trophy, Users } from "lucide-react";
 import { CreateEventButton } from "@/components/hub/CreateEventDialog";
 import { StatusPill } from "@/components/hub/StatusPill";
-import { AnimatedBackground, EmptyState } from "@/components/ui/brand";
+import { EmptyState } from "@/components/ui/brand";
+import { AnimatedBackground, DisplayHeading } from "@/components/stage";
 import { getIdentity } from "@/lib/auth/access";
 import { listMyEvents, loadPrefs, loadTemplates } from "@/lib/live/hub-data";
 import { formatLabel } from "@/lib/competition/event-format";
@@ -24,11 +25,10 @@ export default async function HubHome() {
         <AnimatedBackground />
         <div className="mx-auto flex max-w-7xl flex-wrap items-end justify-between gap-6">
           <div>
-            <p className="kicker">/ HUB DE EVENTOS</p>
-            <h1 className="mt-2 text-4xl font-bold tracking-tight sm:text-5xl">
+            <DisplayHeading as="h1" tag="Hub de eventos" size="md">
               Olá, {me?.name?.split(" ")[0] ?? "organizador"}
               <span className="text-primary">.</span>
-            </h1>
+            </DisplayHeading>
             <p className="mt-3 max-w-xl text-base-content/65">
               Seus eventos e os eventos em que você foi convidado para ajudar.{" "}
               {live > 0 && (
@@ -59,7 +59,7 @@ export default async function HubHome() {
                 <li key={e.id}>
                   <Link
                     href={`/hub/${e.id}`}
-                    className="group block overflow-hidden rounded-tl-3xl rounded-br-3xl border border-base-300 bg-base-100 transition-all hover:-translate-y-1 hover:shadow-[6px_6px_0_0_var(--color-base-content)]"
+                    className="group block overflow-hidden rounded-tl-[1.5rem] rounded-br-[1.5rem] rounded-tr-md rounded-bl-md border border-base-300 bg-base-100 transition-all duration-200 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_12px_30px_-18px_color-mix(in_oklab,var(--color-base-content)_45%,transparent)] focus-visible:outline-2 focus-visible:outline-primary"
                   >
                     <div className="relative h-28 overflow-hidden" style={{ background: bg, color: text }}>
                       {e.theme.background && !e.theme.background.endsWith(".mp4") && (

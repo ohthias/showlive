@@ -185,7 +185,7 @@ for (const [i, t] of teams.entries()) {
 }
 
 // Alianças (estilo FTC): FTC26, mesa FTCM22. Usa o modelo pronto (o Node remove os tipos do .ts).
-const { ALLIANCE_PRESETS } = await import(path.join(root, "lib/alliance-presets.ts"));
+const { ALLIANCE_PRESETS } = await import(path.join(root, "lib/competition/alliance-presets.ts"));
 const ftcPreset = ALLIANCE_PRESETS.find((p) => p.id === "ftc");
 const t5 = { preset: "ftc", colors: ["#111827", "#f97316", "#f9fafb"], background: null, blur: false };
 const { rows: [ev5] } = await q(

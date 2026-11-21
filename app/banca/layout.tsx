@@ -16,8 +16,8 @@ export default async function BancaLayout({ children }: { children: React.ReactN
   const ctx = await getCodeJudge();
   if (!ctx) redirect("/entrar");
   return (
-    <div className="min-h-dvh bg-base-200/50">
-      <header className="sticky top-0 z-30 border-b border-base-300 bg-base-100/90 backdrop-blur">
+    <div data-texture="off" className="stage-tool min-h-dvh bg-base-200/50">
+      <header className="sticky top-0 z-30 border-b border-base-300 bg-base-100/90 backdrop-blur-md">
         <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { AlertCircle, ArrowRight, ClipboardCheck, NotebookPen, Tv } from "lucide-react";
 import { joinMesa, lookupCode, type CodeLookup } from "@/app/actions/access";
 import { joinBanca } from "@/app/actions/judging";
-import { cornerBtn } from "@/components/ui/brand";
+import { cornerBtn, ctaShadow } from "@/components/ui/brand";
 
 /**
  * Um campo só para os três tipos de código:
@@ -72,7 +72,7 @@ export function EnterCodeForm({ initialCode = "", compact = false }: { initialCo
           <button type="button" className="btn btn-ghost btn-lg" onClick={() => setFound(null)}>
             Voltar
           </button>
-          <button className={`btn btn-secondary btn-lg flex-1 ${cornerBtn}`} disabled={pending || name.trim().length < 2}>
+          <button className={`btn btn-secondary btn-lg flex-1 ${cornerBtn} ${ctaShadow}`} disabled={pending || name.trim().length < 2}>
             {pending ? <span className="loading loading-spinner" /> : <>{judge ? "Abrir a sala" : "Abrir a mesa"} <ArrowRight size={18} /></>}
           </button>
         </div>
@@ -101,7 +101,7 @@ export function EnterCodeForm({ initialCode = "", compact = false }: { initialCo
       />
       {!compact && error && <ErrorLine text={error} />}
       <button
-        className={`btn btn-primary ${compact ? "btn-lg" : "btn-lg w-full"} ${cornerBtn} shadow-[4px_4px_0_0_var(--color-base-content)] transition-all hover:-translate-y-0.5`}
+        className={`btn btn-primary ${compact ? "btn-lg" : "btn-lg w-full"} ${cornerBtn} ${ctaShadow}`}
         disabled={pending || code.length < 6}
       >
         {pending ? <span className="loading loading-spinner" /> : compact ? <ArrowRight size={20} /> : <>Entrar <ArrowRight size={18} /></>}

@@ -8,6 +8,7 @@ import { CameraQuickToggle, SceneQuickSwitch, ScreenMessageBox } from "./ScreenC
 import { Bracket } from "@/components/live/Bracket";
 import { TimerControls } from "@/components/live/TimerControls";
 import { cornerBtn, EmptyState, Panel } from "@/components/ui/brand";
+import { InlineAlert } from "@/components/stage";
 import { useToast } from "@/components/ui/Toast";
 import { useLiveEvent } from "@/hooks/useLiveEvent";
 import type { LiveActivity, LiveSnapshot } from "@/lib/live/live-types";
@@ -85,20 +86,22 @@ export function Overview({ initial, codes, isAdmin, canEditScores, site }: Props
 
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {kpis.map(({ label, value, icon: Icon }) => (
-          <div key={label} className="rounded-tl-2xl rounded-br-2xl border border-base-300 bg-base-100 p-4">
+          <div key={label} className="rounded-lg border border-base-300 bg-base-100 px-4 py-3">
             <div className="flex items-center justify-between">
-              <p className="kicker">{label}</p>
-              <Icon size={16} className="text-base-content/35" />
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-base-content/50">{label}</p>
+              <span className="grid size-7 place-items-center rounded-md bg-base-200 text-base-content/60">
+                <Icon size={14} />
+              </span>
             </div>
-            <p className="mt-2 truncate text-2xl font-bold tracking-tight">{value}</p>
+            <p className="mt-1 truncate text-2xl font-bold tabular-nums tracking-tight">{value}</p>
           </div>
         ))}
       </div>
 
       {s.settings.submissionsPaused && (
-        <p className="rounded-tl-xl rounded-br-xl border-2 border-warning bg-warning/10 px-4 py-3 text-sm font-medium">
-          Envios das mesas pausados. Libere em Configurações → Regras das mesas.
-        </p>
+        <InlineAlert type="warning" title="Envios das mesas pausados">
+          Libere em Configurações → Regras das mesas.
+        </InlineAlert>
       )}
 
       <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">

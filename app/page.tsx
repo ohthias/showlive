@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   ArrowRight,
   Check,
@@ -22,7 +21,22 @@ import {
 import { SiteFooter, SiteHeader } from "@/components/site/SiteHeader";
 import { DemoBoard } from "@/components/site/DemoBoard";
 import { EnterCodeForm } from "@/components/site/EnterCodeForm";
-import { AnimatedBackground, cornerBtn, SectionTitle, Tag, toneClasses, type Tone } from "@/components/ui/brand";
+import { toneClasses, type Tone } from "@/components/ui/brand";
+import {
+  AnimatedBackground,
+  ButtonLink,
+  Card,
+  Gear,
+  Highlight,
+  Kicker,
+  Marquee,
+  Mascot,
+  Section,
+  SectionTitle,
+  Sparkle,
+  Starburst,
+  StatusBadge,
+} from "@/components/stage";
 
 const steps: { n: string; title: string; text: string; icon: LucideIcon }[] = [
   {
@@ -146,6 +160,8 @@ const compare: { item: string; before: string | boolean; now: string | boolean }
   { item: "Correção de nota com histórico", before: false, now: true },
 ];
 
+const ligas = ["FLL Challenge", "FLL Future Edition", "OBR Resgate", "FTC · Alianças", "Desafios próprios", "Avaliação por rubricas"];
+
 export default function Home() {
   return (
     <>
@@ -154,18 +170,20 @@ export default function Home() {
         {/* HERO */}
         <section className="relative isolate overflow-hidden px-6 pb-20 pt-14 sm:pt-20">
           <AnimatedBackground />
+          <Starburst size={64} tone="accent" motion="spin" className="absolute right-[6%] top-10 hidden lg:block" />
+          <Gear size={44} tone="secondary" motion="spin" className="absolute bottom-16 left-[3%] hidden xl:block" />
           <div className="mx-auto grid max-w-6xl items-center gap-14 lg:grid-cols-[1.05fr_1fr] [&>*]:min-w-0">
             <div>
-              <Tag className="border-primary bg-primary/10 text-primary">
-                <span className="live-dot" /> NOVA VERSÃO
-              </Tag>
-              <h1 className="mt-5 text-5xl font-bold tracking-tight sm:text-7xl">
+              <StatusBadge status="live">Nova versão</StatusBadge>
+              <h1 className="stage-display mt-5 text-6xl sm:text-8xl">
                 Show<span className="text-primary">Live</span>
                 <span className="text-primary">.</span>
               </h1>
-              <p className="mt-4 text-2xl font-bold tracking-tight sm:text-3xl">
+              <p className="stage-display mt-4 text-2xl sm:text-4xl">
                 Seu evento,{" "}
-                <span className="inline-block -rotate-1 bg-accent px-2 text-accent-content">ao vivo.</span>
+                <Highlight variant="block" tone="accent">
+                  ao vivo.
+                </Highlight>
               </p>
               <p className="mt-6 max-w-xl text-base leading-relaxed text-base-content/65 sm:text-lg">
                 Ranking em tempo real, mesa dos juízes e telão para FLL Challenge, FLL Future Edition, OBR Resgate ou um
@@ -173,35 +191,33 @@ export default function Home() {
                 acontece sozinho.
               </p>
               <div className="mt-9 flex flex-wrap items-center gap-3">
-                <Link
-                  href="/hub"
-                  className={`btn btn-primary btn-lg ${cornerBtn} shadow-[4px_4px_0_0_var(--color-base-content)] transition-all hover:-translate-y-0.5 hover:shadow-[6px_6px_0_0_var(--color-base-content)]`}
-                >
+                <ButtonLink href="/hub" size="lg" iconRight={<ArrowRight size={20} />}>
                   Criar meu evento
-                  <ArrowRight size={20} />
-                </Link>
-                <a href="#como-funciona" className="btn btn-ghost btn-lg">
+                </ButtonLink>
+                <ButtonLink href="#como-funciona" tone="ghost" size="lg" shape="rounded">
                   Como funciona
-                </a>
+                </ButtonLink>
               </div>
 
-              <div className="mt-10 max-w-md rounded-tl-2xl rounded-br-2xl border border-base-300 bg-base-100/80 p-4 backdrop-blur">
-                <p className="kicker mb-2">/ JÁ TEM UM CÓDIGO?</p>
+              <Card corner className="mt-10 max-w-md bg-base-100/85 p-4 backdrop-blur">
+                <Kicker className="mb-2 text-[11px]">Já tem um código?</Kicker>
                 <EnterCodeForm compact />
-              </div>
+              </Card>
             </div>
             <DemoBoard />
           </div>
         </section>
 
+        <Marquee items={ligas} tone="ink" speed={40} tilt={-1} className="relative z-10 -mx-4" />
+
         {/* COMO FUNCIONA */}
-        <section id="como-funciona" className="scroll-mt-20 border-y border-base-300 bg-base-200/40 px-6 py-24">
+        <Section id="como-funciona" tone="muted" innerClassName="relative">
           <div className="mx-auto max-w-6xl">
             <SectionTitle
               kicker="/ COMO FUNCIONA"
               title="Três passos,"
               highlight="nenhum cadastro novo."
-              highlightClass="bg-secondary text-secondary-content"
+              highlightTone="secondary"
               description="O ShowLive é uma aplicação separada, mas a conta é a do RoboStage. Quem organiza entra com ela; quem julga e quem assiste só precisa de um código."
             />
             <div className="relative mt-14">
@@ -212,29 +228,30 @@ export default function Home() {
               <ol className="relative grid gap-5 md:grid-cols-3">
                 {steps.map(({ n, title, text, icon: Icon }, i) => (
                   <li key={n}>
-                    <article className="relative flex h-full flex-col rounded-tl-2xl rounded-br-2xl border-2 border-base-300 bg-base-100 p-6">
+                    <Card corner featured={i === 2} className="flex h-full flex-col">
                       <div className="flex items-center justify-between">
                         <span
-                          className={`relative z-10 grid size-11 place-items-center rounded-tl-xl rounded-br-xl ${
+                          className={`stage-noise relative z-10 grid size-11 place-items-center rounded-tl-xl rounded-br-xl ${
                             i === 2 ? "bg-primary text-primary-content" : "bg-base-200"
                           }`}
                         >
                           <Icon size={20} strokeWidth={1.8} />
                         </span>
-                        <span className="font-mono text-2xl font-bold text-base-content/15">{n}</span>
+                        <span className="font-mono text-4xl font-bold text-base-content/15">{n}</span>
                       </div>
-                      <h3 className="mt-6 text-xl font-bold tracking-tight">{title}</h3>
+                      <h3 className="mt-6 text-xl font-black tracking-tight">{title}</h3>
                       <p className="mt-2 text-sm leading-6 text-base-content/65">{text}</p>
-                    </article>
+                    </Card>
                   </li>
                 ))}
               </ol>
             </div>
           </div>
-        </section>
+        </Section>
 
         {/* TRÊS TELAS */}
-        <section className="px-6 py-24">
+        <Section className="relative">
+          <Mascot size={92} motion="wiggle" rotate={-8} className="absolute right-[8%] top-10 hidden lg:block" />
           <div className="mx-auto max-w-6xl">
             <SectionTitle
               kicker="/ TRÊS TELAS, UM EVENTO"
@@ -246,17 +263,14 @@ export default function Home() {
               {screens.map(({ icon: Icon, who, title, text, bullets, tone }) => {
                 const c = toneClasses[tone];
                 return (
-                  <article
-                    key={title}
-                    className={`group flex flex-col rounded-tl-3xl rounded-br-3xl border border-base-300 bg-base-100 p-7 transition-all duration-300 hover:-translate-y-1 ${c.hover}`}
-                  >
-                    <div className="flex items-center justify-between">
+                  <Card key={title} corner interactive className={`flex flex-col p-7 ${c.hover}`}>
+                    <div className="flex items-center justify-between gap-3">
                       <div className={`flex size-14 items-center justify-center rounded-tl-xl rounded-br-xl transition-colors ${c.icon}`}>
                         <Icon size={24} strokeWidth={1.8} />
                       </div>
-                      <span className={`font-mono text-[10px] font-bold tracking-[0.14em] ${c.tag}`}>{who}</span>
+                      <span className={`stage-label text-right ${c.tag}`}>{who}</span>
                     </div>
-                    <h3 className="mt-7 text-3xl font-bold tracking-tight">{title}</h3>
+                    <h3 className="stage-display mt-7 text-4xl">{title}</h3>
                     <p className="mt-2 text-base-content/60">{text}</p>
                     <ul className="mt-6 space-y-2.5 border-t border-dashed border-base-300 pt-5">
                       {bullets.map((b) => (
@@ -266,59 +280,51 @@ export default function Home() {
                         </li>
                       ))}
                     </ul>
-                  </article>
+                  </Card>
                 );
               })}
             </div>
           </div>
-        </section>
+        </Section>
 
         {/* RECURSOS */}
-        <section id="recursos" className="scroll-mt-20 border-y border-base-300 bg-base-200/40 px-6 py-24">
+        <Section id="recursos" tone="muted" edgeTop="torn">
           <div className="mx-auto max-w-6xl">
-            <SectionTitle
-              kicker="/ RECURSOS"
-              title="Feito para o"
-              highlight="dia do torneio."
-              highlightClass="bg-accent text-accent-content"
-            />
+            <SectionTitle kicker="/ RECURSOS" title="Feito para o" highlight="dia do torneio." highlightTone="accent" />
             <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
               {features.map(({ icon: Icon, title, text, tone }) => {
                 const c = toneClasses[tone];
                 return (
-                  <article
-                    key={title}
-                    className={`group flex h-full flex-col rounded-tl-2xl rounded-br-2xl border border-base-300 bg-base-100 p-6 transition-all duration-300 hover:-translate-y-1 ${c.hover}`}
-                  >
+                  <Card key={title} interactive className={`flex h-full flex-col ${c.hover}`}>
                     <div className={`flex size-12 items-center justify-center rounded-tl-xl rounded-br-xl transition-colors ${c.icon}`}>
                       <Icon size={22} strokeWidth={1.8} />
                     </div>
-                    <h3 className="mt-6 text-lg font-bold tracking-tight">{title}</h3>
+                    <h3 className="mt-6 text-lg font-black tracking-tight">{title}</h3>
                     <p className="mt-2 text-sm leading-6 text-base-content/60">{text}</p>
-                  </article>
+                  </Card>
                 );
               })}
             </div>
           </div>
-        </section>
+        </Section>
 
         {/* ANTES x AGORA */}
-        <section className="px-6 py-24">
+        <Section>
           <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-[1fr_1.3fr] [&>*]:min-w-0">
             <SectionTitle
               kicker="/ VERSÃO ANTERIOR → NOVA"
               title="A mesma ideia,"
               highlight="reconstruída."
-              highlightClass="bg-secondary text-secondary-content"
+              highlightTone="secondary"
               description="Os códigos de acesso, a mesa do robô e o ranking ao vivo da primeira versão continuam. O que mudou foi a base."
             />
-            <div className="overflow-hidden rounded-tl-3xl rounded-br-3xl border border-base-300 bg-base-100 shadow-[8px_8px_0_0_var(--color-primary)]">
+            <Card featured padded={false} className="overflow-hidden [--stage-shadow:var(--color-primary)]">
               <table className="table">
                 <thead>
-                  <tr className="font-mono text-[10px] tracking-[0.14em]">
+                  <tr className="stage-label">
                     <th />
-                    <th>ANTES</th>
-                    <th className="text-primary">AGORA</th>
+                    <th>Antes</th>
+                    <th className="text-primary">Agora</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -335,35 +341,38 @@ export default function Home() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </Card>
           </div>
-        </section>
+        </Section>
 
         {/* CTA */}
-        <section className="px-6 pb-24">
-          <div className="relative mx-auto max-w-6xl overflow-hidden rounded-tl-[2.5rem] rounded-br-[2.5rem] bg-[#1f1c18] p-10 text-[#f3ecdc] sm:p-14">
-            <div aria-hidden className="absolute -right-10 -top-10 size-48 rotate-12 rounded-tl-3xl rounded-br-3xl bg-[#e04444]/90" />
-            <div className="relative max-w-2xl">
-              <p className="font-mono text-xs tracking-[0.2em] text-white/50">/ PRONTO PARA O PRÓXIMO TORNEIO?</p>
-              <h2 className="mt-3 text-3xl font-bold tracking-tight sm:text-5xl">
+        <Section tone="night" edgeTop="checker" className="overflow-hidden" innerClassName="relative overflow-hidden">
+          <Starburst size={180} tone="primary" rotate={12} className="absolute -right-12 -top-12 opacity-90" />
+          <Sparkle size={40} tone="accent" motion="spin" className="absolute bottom-12 right-[22%] hidden md:block" />
+          <div className="relative mx-auto max-w-6xl">
+            <div className="max-w-2xl">
+              <p className="stage-kicker text-white/50">/ PRONTO PARA O PRÓXIMO TORNEIO?</p>
+              <h2 className="stage-display mt-3 text-4xl sm:text-6xl">
                 Crie o evento agora e{" "}
-                <span className="inline-block -rotate-1 bg-[#fabd32] px-2 italic text-[#2f2108]">teste com a equipe.</span>
+                <Highlight variant="block" tone="accent">
+                  teste com a equipe.
+                </Highlight>
               </h2>
               <p className="mt-5 text-white/65">
                 Comece em modo preparação, faça uma rodada de ensaio e zere as notas antes do evento. É grátis com a sua
                 conta RoboStage.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
-                <Link href="/hub" className={`btn btn-lg border-0 bg-[#e04444] text-white hover:bg-[#cf2a2a] ${cornerBtn}`}>
-                  Abrir o hub <ArrowRight size={20} />
-                </Link>
-                <Link href="/entrar" className="btn btn-lg btn-ghost text-white hover:bg-white/10">
-                  <KeyRound size={18} /> Entrar com código
-                </Link>
+              <div className="mt-8 flex flex-wrap gap-3 [--stage-shadow:oklch(8%_0.008_70)]">
+                <ButtonLink href="/hub" size="lg" iconRight={<ArrowRight size={20} />}>
+                  Abrir o hub
+                </ButtonLink>
+                <ButtonLink href="/entrar" tone="ghost" size="lg" shape="rounded" iconLeft={<KeyRound size={18} />} className="text-white hover:bg-white/10">
+                  Entrar com código
+                </ButtonLink>
               </div>
             </div>
           </div>
-        </section>
+        </Section>
       </main>
       <SiteFooter />
     </>
