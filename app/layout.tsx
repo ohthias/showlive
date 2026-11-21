@@ -41,7 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-dvh bg-base-100 font-sans text-base-content antialiased">
         <ClerkProvider localization={ptBR} allowedRedirectOrigins={["https://showlive.robostage.com.br"]}>
-          <ToastProvider>
+          <ToastProvider position="bottom-right">
             <ConfirmProvider>{children}</ConfirmProvider>
           </ToastProvider>
         </ClerkProvider>

@@ -30,7 +30,7 @@ export default async function TemplatesPage() {
             Monte uma vez — tipo, objetivo, regras e pontuação — e use em quantos eventos quiser. Cada evento guarda a própria cópia.
           </p>
         </div>
-        <Link href="/hub/templates/novo" className={`btn btn-primary ${cornerBtn} shadow-[4px_4px_0_0_var(--color-base-content)]`}>
+        <Link href="/hub/templates/novo" className={`btn btn-primary ${cornerBtn}`}>
           <Plus size={16} /> Novo template
         </Link>
       </div>

@@ -3,7 +3,8 @@ import { ArrowLeft, ClipboardCheck, KeyRound, Tv } from "lucide-react";
 import { CopyChip } from "@/components/hub/CopyChip";
 import { EventNav } from "@/components/hub/EventNav";
 import { StatusSwitch } from "@/components/hub/StatusSwitch";
-import { cornerBtn } from "@/components/ui/brand";
+import { Kicker } from "@/components/stage";
+import { toolLinkClass } from "@/components/ui/tool";
 import { hasRole } from "@/lib/auth/access";
 import { loadHubEvent } from "@/lib/live/hub-data";
 import { formatLabel } from "@/lib/competition/event-format";
@@ -34,32 +35,32 @@ export default async function EventLayout({
           <Link href="/hub" className="inline-flex items-center gap-1 text-xs text-base-content/55 hover:text-base-content">
             <ArrowLeft size={13} /> Meus eventos
           </Link>
-          <h1 className="mt-1 truncate text-2xl font-bold tracking-tight sm:text-3xl">{event.name}</h1>
-          <p className="mt-1 font-mono text-[11px] tracking-[0.14em] text-base-content/50">
-            {label.kind.toUpperCase()} · {label.name.toUpperCase()}
-          </p>
+          <Kicker className="mt-2 text-[11px]">
+            {label.kind} · {label.name}
+          </Kicker>
+          <h1 className="stage-display mt-1 truncate text-3xl sm:text-4xl">{event.name}</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <StatusSwitch eventId={event.id} status={event.status} disabled={!isAdmin} />
           {event.code ? (
             <>
               <CopyChip label="EVENTO" value={`${site}/e/${event.code}`} display={event.code} />
-              <Link href={`/e/${event.code}`} target="_blank" className={`btn btn-sm btn-outline ${cornerBtn}`}>
+              <Link href={`/e/${event.code}`} target="_blank" className={toolLinkClass("outline")}>
                 <Tv size={15} /> Telão
               </Link>
-              <Link href={`/mesa/${event.code}`} target="_blank" className={`btn btn-sm btn-secondary ${cornerBtn}`}>
+              <Link href={`/mesa/${event.code}`} target="_blank" className={toolLinkClass("secondary")}>
                 <ClipboardCheck size={15} /> Mesa
               </Link>
             </>
           ) : (
             <>
               <span
-                className="inline-flex items-center gap-1.5 rounded-tl-lg rounded-br-lg border border-dashed border-base-content/25 px-3 py-1.5 text-xs text-base-content/60"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-dashed border-base-content/25 px-3 py-1.5 text-xs text-base-content/60"
                 title="Os códigos de acesso só existem com o evento ao vivo"
               >
                 <KeyRound size={13} /> Códigos gerados ao ficar ao vivo
               </span>
-              <Link href={`/hub/${event.id}/previa`} target="_blank" className={`btn btn-sm btn-outline ${cornerBtn}`}>
+              <Link href={`/hub/${event.id}/previa`} target="_blank" className={toolLinkClass("outline")}>
                 <Tv size={15} /> Prévia do telão
               </Link>
             </>
@@ -67,7 +68,7 @@ export default async function EventLayout({
         </div>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[200px_1fr]">
+      <div className="mt-6 grid gap-6 lg:grid-cols-[210px_1fr]">
         <aside className="lg:sticky lg:top-20 lg:self-start">
           <EventNav eventId={event.id} isAdmin={isAdmin} format={event.format} canEditScores={canEditScores} />
         </aside>
