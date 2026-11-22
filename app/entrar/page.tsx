@@ -57,7 +57,7 @@ export default async function EnterPage({ searchParams }: { searchParams: Promis
         </div>
 
         <div className="relative">
-          <Flower size={58} tone="accent" motion="spin" className="absolute -right-5 -top-6 z-10" />
+          <Flower size={58} tone="accent" motion="spin" className="absolute -right-2 -top-6 z-10 lg:-right-5" />
           <Gear size={40} tone="secondary" motion="spin" className="absolute -bottom-5 -left-4 z-10 hidden sm:block" />
           <Card featured className="p-7 [--stage-shadow:var(--color-secondary)] sm:p-9">
             <Kicker className="mb-4 text-[11px]">Código de 6 caracteres</Kicker>

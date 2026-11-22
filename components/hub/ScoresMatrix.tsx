@@ -66,8 +66,8 @@ export function ScoresMatrix({ initial, missions, challenge }: { initial: LiveSn
         <table className="table table-sm">
           <thead>
             <tr className="font-mono text-[10px] tracking-[0.12em]">
-              <th className="w-10">#</th>
-              <th>EQUIPE</th>
+              <th className="sticky left-0 z-10 w-10 min-w-10 bg-base-100">#</th>
+              <th className="sticky left-10 z-10 bg-base-100 shadow-[1px_0_0_var(--color-base-300)]">EQUIPE</th>
               {rounds.map((r) => (
                 <th key={r.id} className={`text-center ${r.kind !== "qualifying" ? "text-primary" : ""}`}>
                   {r.name.toUpperCase()}
@@ -80,8 +80,9 @@ export function ScoresMatrix({ initial, missions, challenge }: { initial: LiveSn
           <tbody>
             {ranking.map((row) => (
               <tr key={row.team.id} className="hover">
-                <td className="font-mono font-bold">{row.rank}</td>
-                <td className="max-w-56 truncate font-medium">{row.team.name}</td>
+                <td className="sticky left-0 z-10 w-10 min-w-10 bg-base-100 font-mono font-bold">{row.rank}</td>
+                {/* Rank e equipe ficam fixos ao rolar as rodadas para o lado no celular. */}
+                <td className="sticky left-10 z-10 max-w-32 truncate bg-base-100 font-medium shadow-[1px_0_0_var(--color-base-300)] sm:max-w-56">{row.team.name}</td>
                 {rounds.map((r) => {
                   const sc = idx.get(`${row.team.id}:${r.id}`);
                   return (

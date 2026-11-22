@@ -197,7 +197,7 @@ export function ChallengeBuilder({ initial, mode, eventName }: { initial: Challe
       {tab === "sheet" && <ChallengeSheet challenge={ch} eventName={eventName} />}
 
       {tab === "test" && (
-        <div className="grid gap-5 lg:grid-cols-[1fr_280px]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:grid-cols-[minmax(0,1fr)_280px]">
           <CustomScoreForm challenge={ch} responses={test} onChange={setTest} />
           <aside className="lg:sticky lg:top-32 lg:self-start">
             <div className="rounded-tl-2xl rounded-br-2xl border-2 border-base-content bg-base-100 p-5 shadow-[6px_6px_0_0_var(--color-primary)]">
@@ -249,7 +249,7 @@ export function ChallengeBuilder({ initial, mode, eventName }: { initial: Challe
           </Panel>
           )}
 
-          <div className="grid gap-5 xl:grid-cols-[1.2fr_1fr]">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-5 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
             <Panel kicker="/ 2 · IDENTIDADE" title="Nome e objetivo" action={<Icon size={16} className="text-base-content/40" />}>
               <label className="block">
                 <span className="text-sm font-medium">Nome do desafio</span>

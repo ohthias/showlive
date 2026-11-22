@@ -80,7 +80,7 @@ export function ArenaEditor({ eventId, league, scored }: { eventId: string; leag
       </Panel>
 
       {a && (
-        <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <Panel kicker={`/ ARENA ${tab + 1}`} title="Identificação" action={<MapIcon size={16} className="text-base-content/40" />}>
             <label className="block">
               <span className="text-sm font-medium">Nome</span>
