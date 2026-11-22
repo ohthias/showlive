@@ -29,7 +29,7 @@ export function TeamsManager({ eventId, teams }: { eventId: string; teams: Team[
   };
 
   return (
-    <div className="grid gap-6 xl:grid-cols-[1fr_1.5fr]">
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
       <Panel kicker="/ ADICIONAR" title="Colar lista de equipes">
         <form onSubmit={submit} className="space-y-3">
           <textarea

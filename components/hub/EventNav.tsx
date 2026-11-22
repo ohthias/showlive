@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { BookOpen, Clapperboard, ClipboardList, Gauge, KeyRound, Map as MapIcon, NotebookPen, Palette, Settings2, Sparkles, Swords, Users } from "lucide-react";
 
 const ITEMS = [
@@ -33,8 +34,22 @@ export function EventNav({
 }) {
   const path = usePathname();
   const base = `/hub/${eventId}`;
+  const navRef = useRef<HTMLElement>(null);
+
+  // Na faixa horizontal (celular/tablet), mantém a aba ativa visível.
+  useEffect(() => {
+    const nav = navRef.current;
+    const el = nav?.querySelector<HTMLElement>('[aria-current="page"]');
+    if (!nav || !el || nav.scrollWidth <= nav.clientWidth) return;
+    nav.scrollTo({ left: el.offsetLeft - nav.clientWidth / 2 + el.offsetWidth / 2, behavior: "smooth" });
+  }, [path]);
+
   return (
-    <nav aria-label="Seções do evento" className="flex gap-0.5 overflow-x-auto rounded-lg border border-base-300 bg-base-100 p-1.5 lg:flex-col">
+    <nav
+      ref={navRef}
+      aria-label="Seções do evento"
+      className="no-scrollbar -mx-1 flex snap-x [mask-image:linear-gradient(to_right,transparent,#000_12px,#000_calc(100%-28px),transparent)] lg:[mask-image:none] gap-1 overflow-x-auto scroll-px-4 px-1 lg:mx-0 lg:snap-none lg:flex-col lg:gap-0.5 lg:overflow-visible lg:rounded-lg lg:border lg:border-base-300 lg:bg-base-100 lg:p-1.5"
+    >
       <p className="hidden px-2 pb-1 pt-1.5 text-[11px] font-semibold uppercase tracking-wider text-base-content/45 lg:block">Evento</p>
       {ITEMS.filter((i) => (isAdmin || !i.admin || ("scoresEditor" in i && canEditScores)) && (!("only" in i) || i.only === format) && (!("not" in i) || i.not !== format)).map(({ href, label, icon: Icon }) => {
         const full = base + href;
@@ -44,12 +59,12 @@ export function EventNav({
             key={href + label}
             href={full}
             aria-current={active ? "page" : undefined}
-            className={`group flex shrink-0 items-center gap-2.5 rounded-md px-2 py-1.5 text-[13px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-primary ${
+            className={`group flex shrink-0 snap-start items-center gap-2 whitespace-nowrap rounded-md py-1.5 pl-1.5 pr-3 text-[13px] font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-primary lg:gap-2.5 lg:px-2 ${
               active ? "bg-primary/10 text-primary" : "text-base-content/75 hover:bg-base-content/[0.05] hover:text-base-content"
             }`}
           >
             <span
-              className={`grid size-7 shrink-0 place-items-center rounded-md transition-colors ${
+              className={`grid size-6 shrink-0 place-items-center rounded-md transition-colors lg:size-7 ${
                 active ? "bg-primary text-primary-content" : "bg-base-200 text-base-content/70"
               }`}
             >

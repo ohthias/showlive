@@ -29,16 +29,17 @@ export default async function EventLayout({
   const canEditScores = isAdmin || (role === "scorer" && !!st?.scorersCanEdit);
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-      <div className="flex flex-wrap items-start gap-4">
-        <div className="min-w-0 flex-1">
+    <div className="mx-auto max-w-7xl px-4 py-5 sm:px-6 sm:py-6">
+      <div className="flex flex-wrap items-end gap-x-4 gap-y-3">
+        {/* basis 28rem: quando as ações não cabem ao lado, o título fica numa linha própria em vez de espremido. */}
+        <div className="min-w-0 flex-[1_1_28rem]">
           <Link href="/hub" className="inline-flex items-center gap-1 text-xs text-base-content/55 hover:text-base-content">
             <ArrowLeft size={13} /> Meus eventos
           </Link>
           <Kicker className="mt-2 text-[11px]">
             {label.kind} · {label.name}
           </Kicker>
-          <h1 className="stage-display mt-1 truncate text-3xl sm:text-4xl">{event.name}</h1>
+          <h1 className="stage-display mt-1 line-clamp-2 break-words text-2xl sm:text-4xl">{event.name}</h1>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <StatusSwitch eventId={event.id} status={event.status} disabled={!isAdmin} />
@@ -68,8 +69,9 @@ export default async function EventLayout({
         </div>
       </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[210px_1fr]">
-        <aside className="lg:sticky lg:top-20 lg:self-start">
+      <div className="mt-5 grid grid-cols-[minmax(0,1fr)] gap-5 sm:mt-6 lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-6">
+        {/* No celular/tablet a navegação vira uma faixa de abas fixa logo abaixo do cabeçalho (h-14). */}
+        <aside className="sticky top-14 z-30 -mx-4 min-w-0 border-b border-base-300 bg-base-100/95 px-4 py-2 backdrop-blur-md sm:-mx-6 sm:px-6 lg:top-20 lg:z-auto lg:mx-0 lg:self-start lg:border-0 lg:bg-transparent lg:p-0 lg:backdrop-blur-none">
           <EventNav eventId={event.id} isAdmin={isAdmin} format={event.format} canEditScores={canEditScores} />
         </aside>
         <div className="min-w-0">{children}</div>

@@ -272,7 +272,7 @@ export function Telao({ initial, preview = false, forceScene }: { initial: LiveS
                 </span>
               )}
             </div>
-            <h1 className="tv-display mt-2 text-3xl font-black leading-[1.05] tracking-tight md:truncate md:text-5xl 2xl:text-6xl">
+            <h1 className="tv-display mt-2 text-3xl font-black leading-[1.05] tracking-tight md:truncate md:text-4xl lg:text-5xl 2xl:text-6xl">
               {s.event.name}
             </h1>
             <span className="mt-2 block h-1 w-20 rounded-full" style={{ background: `linear-gradient(90deg, ${accent}, ${style.secondary})` }} />
@@ -615,6 +615,17 @@ function TeamName({ row, showDetails, leader, size }: { row: RankingRow; showDet
   );
 }
 
+/** Cabeçalho da rodada: "R1" em telas médias, "ROUND 1" a partir de lg. */
+function RoundLabel({ name }: { name: string }) {
+  const short = name.replace(/^Round\s*/i, "R").replace(/^Rodada\s*/i, "R");
+  return (
+    <>
+      <span className="lg:hidden" title={name}>{short.toUpperCase()}</span>
+      <span className="hidden lg:inline">{name.toUpperCase()}</span>
+    </>
+  );
+}
+
 function TableBoard({ rows, rounds, mode, f, tb, highlight, flashed, showDetails, moves, medals, animate, compact }: BoardProps & { compact: boolean }) {
   const ref = useFlip<HTMLTableSectionElement>(rows, animate);
   const py = compact ? "py-1.5" : "py-2.5";
@@ -623,15 +634,15 @@ function TableBoard({ rows, rounds, mode, f, tb, highlight, flashed, showDetails
       <table className="w-full border-collapse text-left">
         <thead>
           <tr className="font-mono text-xs font-bold tracking-[0.18em]" style={{ background: "var(--tv-accent)", color: "var(--tv-bg)" }}>
-            <th className={`w-24 px-6 text-center ${compact ? "py-2" : "py-3"}`}>#</th>
-            <th className="px-4">EQUIPE</th>
+            <th className={`w-16 px-3 text-center lg:w-24 lg:px-6 ${compact ? "py-2" : "py-3"}`}>#</th>
+            <th className="px-3 lg:px-4">EQUIPE</th>
             {rounds.map((r) => (
-              <th key={r.id} className="w-32 px-4 text-center">
-                {r.name.toUpperCase()}
+              <th key={r.id} className="w-20 whitespace-nowrap px-2 text-center lg:w-32 lg:px-4">
+                <RoundLabel name={r.name} />
                 {r.arena && <span className="block text-[10px] opacity-70">{r.arena.toUpperCase()}</span>}
               </th>
             ))}
-            <th className="w-44 px-6 text-right">{bestLabel(f, mode)}</th>
+            <th className="w-28 whitespace-nowrap px-3 text-right lg:w-44 lg:px-6">{bestLabel(f, mode)}</th>
           </tr>
         </thead>
         <tbody ref={ref}>
@@ -648,7 +659,7 @@ function TableBoard({ rows, rounds, mode, f, tb, highlight, flashed, showDetails
                   ...(leader ? { background: "color-mix(in oklab, var(--tv-accent) 16%, transparent)" } : i % 2 ? { background: "color-mix(in oklab, var(--tv-text) 3%, transparent)" } : {}),
                 }}
               >
-                <td className={`px-6 ${py} text-center`}>
+                <td className={`px-3 lg:px-6 ${py} text-center`}>
                   <div className="flex items-center justify-center gap-1.5">
                     <RankBadge row={row} medals={medals} highlight={highlight} size={compact ? "sm" : "md"} />
                     <span className="w-7 text-left">
@@ -656,18 +667,18 @@ function TableBoard({ rows, rounds, mode, f, tb, highlight, flashed, showDetails
                     </span>
                   </div>
                 </td>
-                <td className={`px-4 ${py}`}>
+                <td className={`px-3 lg:px-4 ${py}`}>
                   <TeamName row={row} showDetails={showDetails && !compact} leader={leader} size={compact ? "text-lg" : "text-xl 2xl:text-2xl"} />
                 </td>
                 {rounds.map((r) => (
-                  <td key={r.id} className={`tv-num px-4 ${py} text-center ${compact ? "text-base" : "text-xl"} opacity-85`}>
+                  <td key={r.id} className={`tv-num px-2 lg:px-4 ${py} text-center ${compact ? "text-base" : "text-lg lg:text-xl"} opacity-85`}>
                     <Score value={row.byRound[r.id]} f={f} />
                     {tb && typeof tb(row.team.id, r.id) === "number" && (
                       <span className="block text-xs opacity-50">{formatClockTime(tb(row.team.id, r.id) as number)}</span>
                     )}
                   </td>
                 ))}
-                <td className={`tv-num px-6 ${py} text-right font-black ${compact ? "text-2xl" : "text-3xl"}`}>
+                <td className={`tv-num px-3 lg:px-6 ${py} text-right font-black ${compact ? "text-2xl" : "text-2xl lg:text-3xl"}`}>
                   <Total row={row} f={f} animate={animate} />
                   {tb && row.tbTotal !== null && <span className="block text-xs font-normal opacity-50">Σ {formatClockTime(row.tbTotal)}</span>}
                 </td>
@@ -688,8 +699,8 @@ function CardsBoard({ rows, rounds, mode, f, tb, highlight, flashed, showDetails
         <span className="w-[5.5rem]">#</span>
         <span className="flex-1">EQUIPE</span>
         {rounds.map((r) => (
-          <span key={r.id} className="w-24 text-center">
-            {r.name.toUpperCase()}
+          <span key={r.id} className="w-24 whitespace-nowrap text-center">
+            <RoundLabel name={r.name} />
           </span>
         ))}
         <span className="w-40 text-right">{bestLabel(f, mode)}</span>
@@ -866,10 +877,12 @@ function MobileList({
                 {mine === row.team.id && <span className="text-xs opacity-60">★</span>}
                 <span className="tv-num text-xl font-black">{row.evaluated ? formatValue(row.score, f) : "—"}</span>
               </div>
-              <div className="tv-num mt-2 flex gap-3 pl-11 text-xs opacity-60">
+              {/* Nomes curtos (R1, R2…) e cada nota inteira numa linha: nada de "Round 1:" quebrando no meio. */}
+              <div className="tv-num mt-2 flex flex-wrap gap-x-3 gap-y-1 pl-11 text-xs">
                 {rounds.map((r) => (
-                  <span key={r.id}>
-                    {r.name}: <Score value={row.byRound[r.id]} f={f} />
+                  <span key={r.id} className="whitespace-nowrap" title={r.name}>
+                    <span className="opacity-50">{r.name.replace(/^Round\s*/i, "R").replace(/^Rodada\s*/i, "R")}</span>{" "}
+                    <span className="opacity-80"><Score value={row.byRound[r.id]} f={f} /></span>
                   </span>
                 ))}
               </div>

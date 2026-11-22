@@ -25,6 +25,12 @@ body {
   @apply bg-base-100 text-base-content;
 }
 
+/* Faixas roláveis (abas, chips) sem barra de rolagem visível. */
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
 /* =====================================================================
    ShowLive — extras sobre o tema do RoboStage
    ===================================================================== */

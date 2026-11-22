@@ -330,7 +330,7 @@ function RubricEditor({ eventId, initial, onClose }: { eventId: string; initial:
       )}
 
       <Panel kicker="/ 1" title="Identificação">
-        <div className="grid gap-3 sm:grid-cols-[1fr_120px]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-3 sm:grid-cols-[minmax(0,1fr)_120px]">
           <label className="block">
             <span className="text-xs font-medium text-base-content/70">Nome</span>
             <input className="input input-bordered mt-1 w-full" value={name} maxLength={60} onChange={(e) => setName(e.target.value)} required placeholder="Projeto de Inovação" />

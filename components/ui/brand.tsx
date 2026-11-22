@@ -95,17 +95,18 @@ export function Panel({
   className?: string;
 }) {
   return (
-    <section className={cn("rounded-tl-2xl rounded-br-2xl rounded-tr-md rounded-bl-md border border-base-300 bg-base-100", className)}>
+    <section className={cn("min-w-0 rounded-tl-2xl rounded-br-2xl rounded-tr-md rounded-bl-md border border-base-300 bg-base-100", className)}>
       {(title || action || kicker) && (
-        <header className="flex items-center justify-between gap-3 border-b border-base-300 px-5 py-3.5">
-          <div className="min-w-0">
+        // Em telas estreitas as ações descem para baixo do título em vez de estourar a largura.
+        <header className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b border-base-300 px-4 py-3 sm:px-5 sm:py-3.5">
+          <div className="min-w-0 flex-1 basis-40">
             {kicker && <p className="kicker">{kicker}</p>}
             {title && <h2 className="truncate font-black tracking-tight">{title}</h2>}
           </div>
-          {action}
+          {action && <div className="flex max-w-full min-w-0 flex-wrap items-center gap-2">{action}</div>}
         </header>
       )}
-      <div className="p-5">{children}</div>
+      <div className="p-4 sm:p-5">{children}</div>
     </section>
   );
 }

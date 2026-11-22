@@ -319,22 +319,23 @@ export default function Home() {
               description="Os códigos de acesso, a mesa do robô e o ranking ao vivo da primeira versão continuam. O que mudou foi a base."
             />
             <Card featured padded={false} className="overflow-hidden [--stage-shadow:var(--color-primary)]">
-              <table className="table">
+              {/* Colunas fixas e quebra de palavra: no celular nada fica cortado na borda do cartão. */}
+              <table className="table table-sm w-full table-fixed text-[13px] hyphens-auto max-sm:[&_td]:px-2.5 max-sm:[&_th]:px-2.5 sm:table-md sm:text-sm">
                 <thead>
                   <tr className="stage-label">
-                    <th />
-                    <th>Antes</th>
-                    <th className="text-primary">Agora</th>
+                    <th className="w-[35%]" />
+                    <th className="w-[31%]">Antes</th>
+                    <th className="w-[34%] text-primary">Agora</th>
                   </tr>
                 </thead>
                 <tbody>
                   {compare.map(({ item, before, now }) => (
                     <tr key={item}>
-                      <td className="font-medium">{item}</td>
+                      <td className="font-medium break-words">{item}</td>
                       <td className="text-base-content/55">
                         <Cell value={before} negative={item.startsWith("Nota duplicada")} />
                       </td>
-                      <td className="font-semibold">
+                      <td className="font-semibold [overflow-wrap:anywhere]">
                         <Cell value={now} negative={item.startsWith("Nota duplicada")} />
                       </td>
                     </tr>

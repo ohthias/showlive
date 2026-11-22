@@ -54,11 +54,11 @@ export function BancaHome({ roomName, locked, rubrics, sessions }: { roomName: s
       {next && (
         <Link
           href={`/banca/${next.id}`}
-          className="group flex items-center gap-4 rounded-tl-3xl rounded-br-3xl border-2 border-base-content bg-base-100 p-5 shadow-[6px_6px_0_0_var(--color-primary)] transition hover:-translate-y-0.5"
+          className="group flex items-center gap-4 rounded-tl-3xl rounded-br-3xl border-2 border-base-content bg-base-100 p-4 sm:p-5 shadow-[6px_6px_0_0_var(--color-primary)] transition hover:-translate-y-0.5"
         >
           <div className="min-w-0 flex-1">
             <p className="kicker">{next.status === "in_progress" ? "/ EM AVALIAÇÃO" : "/ PRÓXIMA EQUIPE"}</p>
-            <p className="truncate text-2xl font-bold">
+            <p className="line-clamp-2 break-words text-xl font-bold sm:text-2xl">
               {next.teamNumber && <span className="mr-2 font-mono text-base-content/50">#{next.teamNumber}</span>}
               {next.teamName}
             </p>
@@ -74,28 +74,34 @@ export function BancaHome({ roomName, locked, rubrics, sessions }: { roomName: s
         <EmptyState icon={<CalendarClock size={22} />} title="Nenhuma equipe agendada nesta sala" text="Peça à organização para gerar o cronograma." />
       ) : (
         <>
-          <label className="input input-bordered flex items-center gap-2">
+          <label className="input input-bordered flex w-full items-center gap-2">
             <Search size={16} className="text-base-content/50" />
             <input className="grow" placeholder="Buscar equipe" value={q} onChange={(e) => setQ(e.target.value)} />
           </label>
           <ul className="divide-y divide-base-300 rounded-tl-2xl rounded-br-2xl border border-base-300 bg-base-100">
             {list.map((s) => (
               <li key={s.id}>
-                <Link href={`/banca/${s.id}`} className="flex items-center gap-3 px-4 py-3 transition hover:bg-base-200/60">
-                  <span className="w-14 shrink-0 font-mono text-sm font-bold">
+                <Link href={`/banca/${s.id}`} className="flex items-center gap-3 px-3 py-3 transition hover:bg-base-200/60 sm:px-4">
+                  <span className="w-12 shrink-0 font-mono text-sm font-bold sm:w-14">
                     <LocalTime iso={s.startsAt} />
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-medium">
-                      {s.teamNumber && <span className="mr-1.5 font-mono text-xs text-base-content/50">#{s.teamNumber}</span>}
+                      {s.teamNumber && <span className="mr-1.5 hidden font-mono text-xs text-base-content/50 sm:inline">#{s.teamNumber}</span>}
                       {s.teamName}
                     </span>
-                    {s.teamOrg && <span className="block truncate text-xs text-base-content/55">{s.teamOrg}</span>}
+                    {/* No celular o número da equipe desce para a linha de baixo e o nome ganha espaço. */}
+                    <span className="block truncate text-xs text-base-content/55">
+                      {s.teamNumber && <span className="mr-1.5 font-mono sm:hidden">#{s.teamNumber}</span>}
+                      {s.teamOrg}
+                    </span>
                   </span>
-                  <span className="font-mono text-xs text-base-content/55">
-                    {s.sent}/{rubrics.length}
+                  <span className="flex shrink-0 flex-col items-end gap-1 sm:flex-row sm:items-center sm:gap-3">
+                    <SessionStatusPill status={s.status} />
+                    <span className="font-mono text-xs text-base-content/55 sm:order-first">
+                      {s.sent}/{rubrics.length} fichas
+                    </span>
                   </span>
-                  <SessionStatusPill status={s.status} />
                 </Link>
               </li>
             ))}

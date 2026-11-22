@@ -291,7 +291,7 @@ export function Mesa({ initial, form, scorerLabel, via, confirmBeforeSend = true
   return (
     <div data-texture="off" className={`stage-tool min-h-dvh bg-base-200/50 ${device.large ? "mesa-large" : ""}`}>
       <header className="sticky top-0 z-30 border-b border-base-300 bg-base-100/90 backdrop-blur-md">
-        <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
+        <div className="mx-auto flex max-w-4xl items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
               <Logo size="text-sm" href={null} />
@@ -541,7 +541,7 @@ export function Mesa({ initial, form, scorerLabel, via, confirmBeforeSend = true
               </span>
             </label>
           )}
-          <div className="mx-auto flex max-w-4xl items-center gap-3 px-4 py-3">
+          <div className="mx-auto flex max-w-4xl items-center gap-2 px-3 py-3 sm:gap-3 sm:px-4">
             <div className="min-w-0 flex-1">
               <p className="truncate text-xs text-base-content/55">
                 {team.name} · {round.name}

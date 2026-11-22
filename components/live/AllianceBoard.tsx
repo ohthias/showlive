@@ -98,7 +98,7 @@ export function AllianceBoard({
               highlight={highlight}
             />
           ) : (
-            <div className="grid gap-6 xl:grid-cols-[1.2fr_1fr]">
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
               {last ? (
                 <MatchCard match={last} teamOf={teamOf} versus={versus} title="ÚLTIMO RESULTADO" big />
               ) : (

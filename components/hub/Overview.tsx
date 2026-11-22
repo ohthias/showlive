@@ -84,16 +84,20 @@ export function Overview({ initial, codes, isAdmin, canEditScores, site }: Props
         </EmptyState>
       )}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {kpis.map(({ label, value, icon: Icon }) => (
-          <div key={label} className="rounded-lg border border-base-300 bg-base-100 px-4 py-3">
-            <div className="flex items-center justify-between">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-base-content/50">{label}</p>
-              <span className="grid size-7 place-items-center rounded-md bg-base-200 text-base-content/60">
+      {/* Celular: três números compactos lado a lado e o último (líder) em largura total. */}
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-2 sm:gap-3 xl:grid-cols-[1fr_1fr_1fr_1.7fr]">
+        {kpis.map(({ label, value, icon: Icon }, i) => (
+          <div
+            key={label}
+            className={`min-w-0 rounded-lg border border-base-300 bg-base-100 px-3 py-2.5 sm:px-4 sm:py-3 ${i === kpis.length - 1 && kpis.length % 2 === 0 ? "col-span-3 sm:col-span-1" : ""}`}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <p className="truncate text-[10px] font-semibold uppercase tracking-wider text-base-content/50 sm:text-[11px]">{label}</p>
+              <span className="hidden size-7 shrink-0 place-items-center rounded-md bg-base-200 text-base-content/60 sm:grid">
                 <Icon size={14} />
               </span>
             </div>
-            <p className="mt-1 truncate text-2xl font-bold tabular-nums tracking-tight">{value}</p>
+            <p className="mt-1 truncate text-xl font-bold tabular-nums tracking-tight sm:text-2xl" title={String(value)}>{value}</p>
           </div>
         ))}
       </div>
@@ -104,7 +108,7 @@ export function Overview({ initial, codes, isAdmin, canEditScores, site }: Props
         </InlineAlert>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-[1.4fr_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
         <div className="space-y-6">
           <ApprovalQueue snapshot={s} canEdit={canEditScores} />
           {alliance ? (

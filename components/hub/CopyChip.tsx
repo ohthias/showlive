@@ -13,12 +13,12 @@ export function CopyChip({ value, label, display, className = "" }: { value: str
         setOk(true);
         setTimeout(() => setOk(false), 1500);
       }}
-      className={`group inline-flex items-center gap-2 rounded-tl-lg rounded-br-lg border border-base-300 bg-base-100 px-3 py-1.5 transition hover:border-base-content/40 ${className}`}
+      className={`group inline-flex max-w-full min-w-0 items-center gap-2 rounded-tl-lg rounded-br-lg border border-base-300 bg-base-100 px-3 py-1.5 transition hover:border-base-content/40 ${className}`}
       title={`Copiar ${label ?? value}`}
     >
-      {label && <span className="font-mono text-[10px] tracking-[0.14em] text-base-content/50">{label}</span>}
-      <span className="font-mono font-bold tracking-[0.15em]">{display ?? value}</span>
-      {ok ? <Check size={14} className="text-success" /> : <Copy size={14} className="text-base-content/40 group-hover:text-base-content" />}
+      {label && <span className="shrink-0 font-mono text-[10px] tracking-[0.14em] text-base-content/50">{label}</span>}
+      <span className="min-w-0 truncate font-mono font-bold tracking-[0.15em]">{display ?? value}</span>
+      {ok ? <Check size={14} className="shrink-0 text-success" /> : <Copy size={14} className="shrink-0 text-base-content/40 group-hover:text-base-content" />}
     </button>
   );
 }
